@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<hoiku_cam>
+  <wifi>
+    <ssid>Hoiku001</ssid>
+    <password>hoi-hoi-hoi9</password>
+    <host_name>hoiku01</host_name>
+  </wifi>
+  <upload>
+    <server>RaspberryPi</server>
+    <storage>FlashAir</storage>
+  </upload>
+</hoiku_cam>
