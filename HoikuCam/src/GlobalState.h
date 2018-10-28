@@ -28,7 +28,7 @@ public:
 	bool IsActive();
 	void MakeFilePath();
 	std::string GetFilePath();
-	void UploadRequest();
+	void UpdateRequest();
 	void PowerOff();
 	void PowerOn();
 	void TriggerOn();

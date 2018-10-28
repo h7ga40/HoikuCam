@@ -11,7 +11,7 @@ public:
 		PowerOn = 0x04,
 		TriggerOn = 0x08,
 		RecAudio = 0x10,
-		UploadRequest = 0x20,
+		UpdateRequest = 0x20,
 		PowerOff = 0x40,
 		HeartRateInt = 0x80,
 	};

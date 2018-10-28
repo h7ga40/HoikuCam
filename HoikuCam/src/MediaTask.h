@@ -102,7 +102,7 @@ public:
 			|| (visualTask.GetState() == VisualTask::State::Recording);
 	}
 	void RecAudio();
-	void UploadRequest();
+	void UpdateRequest();
 };
 
 class FaceDetectTask : public TaskThread, public ITask

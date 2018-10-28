@@ -46,10 +46,10 @@ std::string GlobalState::GetFilePath()
 	return _path;
 }
 
-void GlobalState::UploadRequest()
+void GlobalState::UpdateRequest()
 {
-	printf("GlobalState::UploadRequest\r\n");
-	netTask->Signal(InterTaskSignals::UploadRequest);
+	printf("GlobalState::UpdateRequest\r\n");
+	netTask->Signal(InterTaskSignals::UpdateRequest);
 }
 
 void GlobalState::PowerOff()

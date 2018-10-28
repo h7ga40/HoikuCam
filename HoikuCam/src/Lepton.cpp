@@ -27,27 +27,27 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include "Lepton.h"
 
-Lepton::Lepton(PinName sda, PinName scl, PinName ss,
-	PinName mosi, PinName miso, PinName sclk, PinName ssel) :
+LeptonTask::LeptonTask(SensorTask *sensorTask) :
 	Task(osWaitForever),
 	_state(State::PowerOff),
-	_wire(sda, scl),
-	_ss(ss),
-	_spi(mosi, miso, sclk, ssel),
+	_sensorTask(sensorTask),
+	_spi(P5_6, P5_7, P5_4, NC),
+	_wire(I2C_SDA, I2C_SCL),
+	_ss(P5_8),
 	image_index(0)
 {
 }
 
-Lepton::~Lepton()
+LeptonTask::~LeptonTask()
 {
 }
 
-void Lepton::Init()
+void LeptonTask::Init()
 {
-	_spi.format(8, 3/*?*/);
+	_spi.format(16, 3/*?*/);
 }
 
-int Lepton::spi_read_word(int data)
+int LeptonTask::spi_read_word(int data)
 {
 	uint8_t write_data[2];
 	uint8_t read_data[2] = { 0, 0 };
@@ -63,7 +63,7 @@ int Lepton::spi_read_word(int data)
 	return (read_data[0] << 8) | read_data[1];
 }
 
-void Lepton::read_lepton_frame(void)
+void LeptonTask::read_lepton_frame(void)
 {
 	int i;
 	uint8_t write_data[2] = { 0, 0 };
@@ -81,7 +81,7 @@ void Lepton::read_lepton_frame(void)
 	}
 }
 
-void Lepton::lepton_sync(void)
+void LeptonTask::lepton_sync(void)
 {
 	int i;
 	int data = 0x0f;
@@ -104,7 +104,7 @@ void Lepton::lepton_sync(void)
 	}
 }
 
-void Lepton::print_lepton_frame(void)
+void LeptonTask::print_lepton_frame(void)
 {
 	int i;
 	for (i = 0; i < (VOSPI_FRAME_SIZE); i++) {
@@ -113,7 +113,7 @@ void Lepton::print_lepton_frame(void)
 	printf(" \n");
 }
 
-void Lepton::print_image(void)
+void LeptonTask::print_image(void)
 {
 	int i;
 	for (i = 0; i < (IMAGE_SIZE); i++) {
@@ -122,7 +122,7 @@ void Lepton::print_image(void)
 	printf(" \n");
 }
 
-void Lepton::lepton_command(unsigned int moduleID, unsigned int commandID, unsigned int command)
+void LeptonTask::lepton_command(unsigned int moduleID, unsigned int commandID, unsigned int command)
 {
 	uint8_t error;
 	uint8_t write_data[4];
@@ -146,7 +146,7 @@ void Lepton::lepton_command(unsigned int moduleID, unsigned int commandID, unsig
 	}
 }
 
-void Lepton::agc_enable()
+void LeptonTask::agc_enable()
 {
 	uint8_t error;
 	uint8_t write_data[4];
@@ -162,7 +162,7 @@ void Lepton::agc_enable()
 	}
 }
 
-void Lepton::set_reg(unsigned int reg)
+void LeptonTask::set_reg(unsigned int reg)
 {
 	uint8_t error;
 	uint8_t write_data[2];
@@ -176,7 +176,7 @@ void Lepton::set_reg(unsigned int reg)
 	}
 }
 
-int Lepton::read_reg(unsigned int reg)
+int LeptonTask::read_reg(unsigned int reg)
 {
 	int reading = 0;
 	uint8_t read_data[2] = { 0, 0 };
@@ -199,7 +199,7 @@ int Lepton::read_reg(unsigned int reg)
 	return reading;
 }
 
-int Lepton::read_data()
+int LeptonTask::read_data()
 {
 	int i;
 	int data;
@@ -224,7 +224,7 @@ int Lepton::read_data()
 	return 0;
 }
 
-void Lepton::OnStart()
+void LeptonTask::OnStart()
 {
 	std::string debugString();
 	printf("beginTransmission\n");
@@ -282,7 +282,7 @@ void Lepton::OnStart()
 	// read_data();
 }
 
-void Lepton::ProcessEvent(InterTaskSignals::T signals)
+void LeptonTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::PowerOn) != 0) {
 		_state = State::Viewing;
@@ -294,7 +294,7 @@ void Lepton::ProcessEvent(InterTaskSignals::T signals)
 	}
 }
 
-void Lepton::Process()
+void LeptonTask::Process()
 {
 	if (_timer != 0)
 		return;

@@ -41,7 +41,7 @@ public:
 		enum T {
 			Undetected,
 			Detected,
-			Upload
+			Update
 		};
 	};
 public:
@@ -55,7 +55,7 @@ private:
 	SocketAddress _serverAddr;
 	std::string _storage;
 	SocketAddress _storageAddr;
-	bool _upload_req;
+	bool _update_req;
 public:
 	void Init(std::string server, std::string storage);
 	State::T GetState() { return _state; }
@@ -121,7 +121,7 @@ public:
 	void WifiStatus(nsapi_event_t evt);
 	void WifiConnected();
 	bool QuerySever(const std::string hostname, SocketAddress &addr);
-	bool Upload(SocketAddress server, SocketAddress storage);
+	bool Update(SocketAddress server, SocketAddress storage);
 	bool WifiSleep(bool enable);
 };
 

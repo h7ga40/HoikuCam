@@ -71,7 +71,7 @@ UploadTask::UploadTask(NetTask *owner) :
 	_serverAddr(),
 	_storage(),
 	_storageAddr(),
-	_upload_req(false)
+	_update_req(false)
 {
 }
 
@@ -89,14 +89,14 @@ void UploadTask::Init(std::string server, std::string storage)
 
 void UploadTask::ProcessEvent(InterTaskSignals::T signals)
 {
-	if ((signals & InterTaskSignals::UploadRequest) != 0) {
-		_upload_req = true;
+	if ((signals & InterTaskSignals::UpdateRequest) != 0) {
+		_update_req = true;
 		if (_serverAddr.get_ip_version() == NSAPI_UNSPEC) {
 			_state = State::Undetected;
 			_timer = 0;
 		}
 		else {
-			_state = State::Upload;
+			_state = State::Update;
 			_timer = 0;
 		}
 	}
@@ -119,8 +119,8 @@ void UploadTask::Process()
 		else if (_owner->QuerySever(_server.c_str(), addr)) {
 			_serverAddr.set_addr(addr.get_addr());
 			_retry = 0;
-			if (_upload_req) {
-				_state = State::Upload;
+			if (_update_req) {
+				_state = State::Update;
 				_timer = 0;
 			}
 			else {
@@ -151,11 +151,11 @@ void UploadTask::Process()
 			_timer = osWaitForever;
 		}
 		break;
-	case State::Upload:
-		ret = _owner->Upload(_serverAddr, _storageAddr);
+	case State::Update:
+		ret = _owner->Update(_serverAddr, _storageAddr);
 		if (ret) {
 			_owner->WifiSleep(true);
-			_upload_req = false;
+			_update_req = false;
 			_retry = 0;
 			_state = State::Detected;
 			_timer = osWaitForever;
@@ -171,12 +171,12 @@ void UploadTask::Process()
 				}
 				else {
 					_retry = 0;
-					_state = State::Upload;
+					_state = State::Update;
 					_timer = 3 * 60 * 1000;
 				}
 			}
 			else {
-				_state = State::Upload;
+				_state = State::Update;
 				_timer = 10 * 1000;
 			}
 		}
@@ -354,7 +354,7 @@ bool NetTask::InvokeNtp()
 
 bool NetTask::IsActive()
 {
-	return _uploadTask.GetState() == UploadTask::State::Upload;
+	return _uploadTask.GetState() == UploadTask::State::Update;
 }
 
 bool NetTask::QuerySever(const std::string hostname, SocketAddress &addr)
@@ -362,13 +362,13 @@ bool NetTask::QuerySever(const std::string hostname, SocketAddress &addr)
 	return _wifi->mdns_query(hostname.c_str(), addr);
 }
 
-bool NetTask::Upload(SocketAddress server, SocketAddress storage)
+bool NetTask::Update(SocketAddress server, SocketAddress storage)
 {
 	auto url = std::string("http://") + std::string(server.get_ip_address())
 		+ ":3000/update?ip=" + std::string(storage.get_ip_address());
-	auto post_req = new HttpRequest(_wifi, HTTP_GET, url.c_str());
-	auto post_res = post_req->send();
-	return (post_res != NULL) && (post_res->get_status_code() == 200);
+	auto get_req = new HttpRequest(_wifi, HTTP_GET, url.c_str());
+	auto get_res = get_req->send();
+	return (get_res != NULL) && (get_res->get_status_code() == 200);
 }
 
 void NetTask::WifiStatus(nsapi_event_t evt)

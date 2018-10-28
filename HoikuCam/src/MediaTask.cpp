@@ -305,7 +305,7 @@ void AudioTask::Process()
 				wav_fp = NULL;
 			}
 
-			_owner->UploadRequest();
+			_owner->UpdateRequest();
 
 			_state = State::Idle;
 			_timer = osWaitForever;
@@ -431,9 +431,9 @@ void MediaTask::RecAudio()
 	Signal(InterTaskSignals::RecAudio);
 }
 
-void MediaTask::UploadRequest()
+void MediaTask::UpdateRequest()
 {
-	_globalState->UploadRequest();
+	_globalState->UpdateRequest();
 }
 
 FaceDetectTask::FaceDetectTask(GlobalState *globalState) :

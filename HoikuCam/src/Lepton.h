@@ -18,7 +18,9 @@
 #define VOSPI_FRAME_SIZE (164)
 #define IMAGE_SIZE (800)
 
-class Lepton : public Task
+class SensorTask;
+
+class LeptonTask : public Task
 {
 public:
 	class State
@@ -30,14 +32,14 @@ public:
 		};
 	};
 public:
-	Lepton(PinName sda, PinName scl, PinName ss,
-		PinName mosi, PinName miso, PinName sclk, PinName ssel);
-	virtual ~Lepton();
+	LeptonTask(SensorTask *sensorTask);
+	virtual ~LeptonTask();
 private:
 	State::T _state;
+	SensorTask *_sensorTask;
+	mbed::SPI _spi;
 	mbed::I2C _wire;
 	mbed::DigitalOut _ss;
-	mbed::SPI _spi;
 	uint8_t lepton_frame_packet[VOSPI_FRAME_SIZE];
 	uint8_t image[IMAGE_SIZE];
 	int image_index;
