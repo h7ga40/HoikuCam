@@ -26,15 +26,37 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mbed.h>
 #include <string>
 #include "Lepton.h"
+#include "Palettes.h"
+#include "EasyAttach_CameraAndLCD.h"
+
+//#define ADDRESS  (0x2A)
+#define ADDRESS  (0x54)
+
+#define AGC (0x01)
+#define SYS (0x02)
+#define VID (0x03)
+#define OEM (0x08)
+
+#define GET (0x00)
+#define SET (0x01)
+#define RUN (0x02)
+
+#define RESULT_BUFFER_BYTE_PER_PIXEL  (2u)
+#define RESULT_BUFFER_STRIDE          (((LCD_PIXEL_WIDTH * RESULT_BUFFER_BYTE_PER_PIXEL) + 31u) & ~31u)
+#define RESULT_BUFFER_HEIGHT          (LCD_PIXEL_HEIGHT)
+extern uint8_t user_frame_buffer_result[RESULT_BUFFER_STRIDE * RESULT_BUFFER_HEIGHT]__attribute((section("NC_BSS"), aligned(32)));
 
 LeptonTask::LeptonTask(SensorTask *sensorTask) :
 	Task(osWaitForever),
 	_state(State::PowerOff),
 	_sensorTask(sensorTask),
 	_spi(P5_6, P5_7, P5_4, NC),
+	//_spi(P4_6, P4_7, P4_4, NC),
 	_wire(I2C_SDA, I2C_SCL),
 	_ss(P5_8),
-	image_index(0)
+	//_ss(P4_5),
+	resets(0),
+	_packet_per_frame(60)
 {
 }
 
@@ -44,87 +66,14 @@ LeptonTask::~LeptonTask()
 
 void LeptonTask::Init()
 {
-	_spi.format(16, 3/*?*/);
+	_spi.format(8, 3/*?*/);
+	//_spi.frequency(20000000);
+	_spi.frequency(16000000);
 }
 
-int LeptonTask::spi_read_word(int data)
+void LeptonTask::command(unsigned int moduleID, unsigned int commandID, unsigned int command)
 {
-	uint8_t write_data[2];
-	uint8_t read_data[2] = { 0, 0 };
-
-	// take the SS pin low to select the chip:
-	_ss = false;
-	//  send in the address and value via SPI:
-	write_data[0] = (uint8_t)(data >> 8);
-	write_data[1] = (uint8_t)(data);
-	_spi.write((char *)write_data, sizeof(write_data), (char *)read_data, sizeof(read_data));
-	// take the SS pin high to de-select the chip:
-	_ss = true;
-	return (read_data[0] << 8) | read_data[1];
-}
-
-void LeptonTask::read_lepton_frame(void)
-{
-	int i;
-	uint8_t write_data[2] = { 0, 0 };
-	uint8_t read_data[2] = { 0, 0 };
-
-	for (i = 0; i < (VOSPI_FRAME_SIZE / 2); i++) {
-		_ss = false;
-		//  send in the address and value via SPI:
-		_spi.write((char *)write_data, sizeof(write_data), (char *)read_data, sizeof(read_data));
-		lepton_frame_packet[2 * i] = read_data[0];
-		lepton_frame_packet[2 * i + 1] = read_data[1];
-
-		// take the SS pin high to de-select the chip:
-		_ss = true;
-	}
-}
-
-void LeptonTask::lepton_sync(void)
-{
-	int i;
-	int data = 0x0f;
-	uint8_t write_data[2] = { 0, 0 };
-	uint8_t read_data[2] = { 0, 0 };
-
-	_ss = true;
-	osDelay(185);
-	while ((data & 0x0f) == 0x0f) {
-		_ss = false;
-		_spi.write((char *)write_data, sizeof(write_data), (char *)read_data, sizeof(read_data));
-		data = (read_data[0] << 8) | read_data[1];
-		_ss = true;
-
-		for (i = 0; i < ((VOSPI_FRAME_SIZE - 2) / 2); i++) {
-			_ss = false;
-			_spi.write((char *)write_data, sizeof(write_data), (char *)read_data, sizeof(read_data));
-			_ss = true;
-		}
-	}
-}
-
-void LeptonTask::print_lepton_frame(void)
-{
-	int i;
-	for (i = 0; i < (VOSPI_FRAME_SIZE); i++) {
-		printf("%x,", lepton_frame_packet[i]);
-	}
-	printf(" \n");
-}
-
-void LeptonTask::print_image(void)
-{
-	int i;
-	for (i = 0; i < (IMAGE_SIZE); i++) {
-		printf("%x,", image[i]);
-	}
-	printf(" \n");
-}
-
-void LeptonTask::lepton_command(unsigned int moduleID, unsigned int commandID, unsigned int command)
-{
-	uint8_t error;
+	int error;
 	uint8_t write_data[4];
 
 	// Command Register is a 16-bit register located at Register Address 0x0004
@@ -148,7 +97,7 @@ void LeptonTask::lepton_command(unsigned int moduleID, unsigned int commandID, u
 
 void LeptonTask::agc_enable()
 {
-	uint8_t error;
+	int error;
 	uint8_t write_data[4];
 
 	write_data[0] = 0x01;
@@ -164,11 +113,11 @@ void LeptonTask::agc_enable()
 
 void LeptonTask::set_reg(unsigned int reg)
 {
-	uint8_t error;
+	int error;
 	uint8_t write_data[2];
 
 	write_data[0] = reg >> 8 & 0xff;
-	write_data[0] = reg & 0xff;            // sends one uint8_t
+	write_data[1] = reg & 0xff;            // sends one uint8_t
 
 	error = _wire.write(ADDRESS, (char *)write_data, sizeof(write_data));
 	if (error != 0) {
@@ -178,13 +127,17 @@ void LeptonTask::set_reg(unsigned int reg)
 
 int LeptonTask::read_reg(unsigned int reg)
 {
+	int error;
 	int reading = 0;
 	uint8_t read_data[2] = { 0, 0 };
 	char temp[20];
 
 	set_reg(reg);
 
-	_wire.read(ADDRESS, (char *)read_data, sizeof(read_data));
+	error = _wire.read(ADDRESS, (char *)read_data, sizeof(read_data));
+	if (error != 0) {
+		printf("error=%d\n", error);
+	}
 
 	reading = read_data[0];  // receive high uint8_t (overwrites previous reading)
 	//Serial.println(reading);
@@ -199,10 +152,9 @@ int LeptonTask::read_reg(unsigned int reg)
 	return reading;
 }
 
-int LeptonTask::read_data()
+int LeptonTask::read_data(uint8_t *data, int len)
 {
 	int i;
-	int data;
 	int payload_length;
 
 	while (read_reg(0x2) & 0x01) {
@@ -211,22 +163,27 @@ int LeptonTask::read_data()
 
 	payload_length = read_reg(0x6);
 	printf("payload_length=%d\n", payload_length);
-
-	_wire.read(ADDRESS, NULL, 0, true);
-	//set_reg(0x08);
-	for (i = 0; i < (payload_length / 2); i++) {
-		data = _wire.read(1) << 8;
-		data |= _wire.read(1);
-		printf("%x\n", data);
+	memset(data, 0xFF, len);
+	_wire.read(ADDRESS, (char *)data, payload_length);
+	for (i = 0; i < payload_length; i += 2) {
+		printf("%04x\n", (data[i] << 8) | data[i + 1]);
 	}
-	_wire.stop();
 
 	return 0;
 }
 
 void LeptonTask::OnStart()
 {
-	std::string debugString();
+	uint8_t data[32];
+
+	_ss = 1;
+
+	_ss = 0;
+
+	_ss = 1;
+
+	Thread::wait(185);
+
 	printf("beginTransmission\n");
 
 	//set_reg(0);
@@ -235,76 +192,194 @@ void LeptonTask::OnStart()
 
 	read_reg(0x2);
 
-
 	printf("SYS Camera Customer Serial Number\n");
-	lepton_command(SYS, 0x28 >> 2, GET);
-	read_data();
+	command(SYS, 0x28 >> 2, GET);
+	read_data(data, sizeof(data));
 
 	printf("SYS Flir Serial Number\n");
-	lepton_command(SYS, 0x2, GET);
-	read_data();
+	command(SYS, 0x2, GET);
+	read_data(data, sizeof(data));
 
 	printf("SYS Camera Uptime\n");
-	lepton_command(SYS, 0x0C >> 2, GET);
-	read_data();
+	command(SYS, 0x0C >> 2, GET);
+	read_data(data, sizeof(data));
 
 	printf("SYS Fpa Temperature Kelvin\n");
-	lepton_command(SYS, 0x14 >> 2, GET);
-	read_data();
+	command(SYS, 0x14 >> 2, GET);
+	read_data(data, sizeof(data));
 
 	printf("SYS Aux Temperature Kelvin\n");
-	lepton_command(SYS, 0x10 >> 2, GET);
-	read_data();
+	command(SYS, 0x10 >> 2, GET);
+	read_data(data, sizeof(data));
 
 	printf("OEM Chip Mask Revision\n");
-	lepton_command(OEM, 0x14 >> 2, GET);
-	read_data();
+	command(OEM, 0x14 >> 2, GET);
+	read_data(data, sizeof(data));
 
 	//printf("OEM Part Number\n");
-	//lepton_command(OEM, 0x1C >> 2 , GET);
-	//read_data();
+	//command(OEM, 0x1C >> 2 , GET);
+	//read_data(data, sizeof(data));
 
 	printf("OEM Camera Software Revision\n");
-	lepton_command(OEM, 0x20 >> 2, GET);
-	read_data();
-
+	command(OEM, 0x20 >> 2, GET);
+	read_data(data, sizeof(data));
+#if 0
 	printf("AGC Enable\n");
-	//lepton_command(AGC, 0x01  , SET);
+	//command(AGC, 0x01, SET);
 	agc_enable();
-	read_data();
-
+	read_data(data, sizeof(data));
+#endif
 	printf("AGC READ\n");
-	lepton_command(AGC, 0x00, GET);
-	read_data();
+	command(AGC, 0x00, GET);
+	read_data(data, sizeof(data));
 
-	// printf("SYS Telemetry Enable State\n");
-	//lepton_command(SYS, 0x19>>2 ,GET);
-	// read_data();
+	printf("SYS Telemetry Enable State");
+	command(SYS, 0x18 >> 2 ,GET);
+	read_data(data, sizeof(data));
+
+	int telemetory = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	if (telemetory != 0) {
+		_packet_per_frame = 63;
+	}
+	else {
+		_packet_per_frame = 60;
+	}
+
+	printf("VID Focus ROI Select\n");
+	command(/*VID*/0x03, 0x10>>2, GET);
+	read_data(data, sizeof(data));
+
+	_timer = 500;
+	_state = State::Capture;
 }
 
 void LeptonTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::PowerOn) != 0) {
-		_state = State::Viewing;
-		_timer = 100;
+		_state = State::Capture;
+		_timer = 0;
 	}
 	if ((signals & InterTaskSignals::PowerOff) != 0) {
 		_state = State::PowerOff;
-		_timer = osWaitForever;
+		_timer = -1;
 	}
 }
 
 void LeptonTask::Process()
 {
+	uint8_t *result = _frame_packet;
+	uint16_t *frameBuffer;
+	uint16_t value, minValue, maxValue;
+	float diff, scale;
+	int packet_id;
+
 	if (_timer != 0)
 		return;
 
-	_timer = 100;
+	switch (_state) {
+	case State::Resets:
+		_ss = 1;
+		_state = State::Capture;
+		_timer = 1;
+		break;
+	case State::Capture:
+		minValue = 65535;
+		maxValue = 0;
+		packet_id = -1;
+		for (int row = 0; row < PACKETS_PER_FRAME; )
+		{
+			_ss = 0;
+			//read data packets from lepton over SPI
+			_spi.write(NULL, 0, (char *)result, PACKET_SIZE);
+			_ss = 1;
 
-	//lepton_sync();
-	read_lepton_frame();
-	//if(lepton_frame_packet[i]&0x0f != 0x0f )
-	{
-	  //print_lepton_frame();
+			int id = (result[0] << 8) | result[1];
+			if (id == packet_id) {
+				row++;
+				continue;
+			}
+			else if ((id & 0x0F00) == 0x0F00) {
+				if (packet_id != -1) {
+					row++;
+					continue;
+				}
+				_state = State::Capture;
+				_timer = 0;
+				return;
+			}
+
+			if ((packet_id == -1) && ((id & 0x0FFF) != 0x7FF)) {
+				int r = 2 * (id & 0x003F);
+				if (r >= PACKETS_PER_FRAME)
+					continue;
+				row = r;
+			}
+			packet_id = id;
+
+			uint16_t *pixel = &image[PIXEL_PER_LINE * row];
+			frameBuffer = (uint16_t *)result;
+			//skip the first 2 uint16_t's of every packet, they're 4 header bytes
+			for (int i = 2; i < PACKET_SIZE_UINT16; i++) {
+				//flip the MSB and LSB at the last second
+				value = frameBuffer[i];
+				value = (value >> 8) | (value << 8);
+				//frameBuffer[i] = value;
+
+				if (value > maxValue) {
+					maxValue = value;
+				}
+				if (value < minValue) {
+					minValue = value;
+				}
+				*pixel++ = value;
+			}
+
+			row++;
+		}
+
+		if (packet_id == -1) {
+			_state = State::Capture;
+			_timer = 0;
+			return;
+		}
+
+		_maxValue = maxValue;
+		_minValue = minValue;
+
+		resets++;
+		_state = State::Viewing;
+		_timer = 0;
+		break;
+	case State::Viewing:
+		//lets emit the signal for update
+		minValue = _minValue;
+		diff = _maxValue - minValue;
+		scale = 255.9 / diff;
+		for (int row = 0; row < PACKETS_PER_FRAME; row++) {
+			uint16_t *values = &image[PIXEL_PER_LINE * row];
+			uint16_t *pixel = (uint16_t *)&user_frame_buffer_result[RESULT_BUFFER_BYTE_PER_PIXEL * LCD_PIXEL_WIDTH * row];
+			for (int column = 0; column < PIXEL_PER_LINE; column++) {
+				//uint8_t index = (*values - minValue) * scale;
+				//uint8_t index = *values;
+				uint8_t index = (uint8_t)(*values >> 1);
+				const uint8_t *colormap = &colormap_rainbow[3 * index];
+				// ARGB4444
+				*pixel++ = 0xF000 | ((*colormap++ >> 4) << 16) | ((*colormap++ >> 4) << 8) | ((*colormap++ >> 4) << 0);
+			}
+		}
+
+		//Note: we've selected 750 resets as an arbitrary limit, since there should never be 750 "null" packets between two valid transmissions at the current poll rate
+		//By polling faster, developers may easily exceed this count, and the down period between frames may then be flagged as a loss of sync
+		if (resets == 750) {
+			resets = 0;
+			_ss = 0;
+			_state = State::Resets;
+			_timer = 750;
+		}
+		else {
+			_state = State::Capture;
+			_timer = 100;
+		}
+		break;
 	}
 }
