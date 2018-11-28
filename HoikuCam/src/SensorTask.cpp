@@ -265,6 +265,11 @@ void HeartRateTask::Process()
 	if (_timer != 0)
 		return;
 
+	if ((_state == State::InitError) || (_state == State::DeviceError)) {
+		_timer = osWaitForever;
+		return;
+	}
+
 	if (bh1792.GetMSR() <= BH1792_PRM_MSR_1024HZ) {
 		_timer = 1000;		// 1Hz timer
 
@@ -300,12 +305,14 @@ SensorTask::SensorTask(GlobalState *globalState) :
 	triggerButton(this),
 	gripButton(this),
 	powerOffTask(this),
-	heartRateTask(this)
+	heartRateTask(this),
+	leptonTask(this)
 {
 	_tasks[0] = &triggerButton;
 	_tasks[1] = &gripButton;
 	_tasks[2] = &powerOffTask;
 	_tasks[3] = &heartRateTask;
+	_tasks[4] = &leptonTask;
 }
 
 SensorTask::~SensorTask()

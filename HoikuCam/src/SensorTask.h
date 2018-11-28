@@ -4,6 +4,7 @@
 
 #include "TaskBase.h"
 #include "bh1792.h"
+#include "Lepton.h"
 
 class SensorTask;
 
@@ -122,12 +123,13 @@ public:
 	virtual ~SensorTask();
 private:
 	Tasks _task;
-	ITask *_tasks[4];
+	ITask *_tasks[5];
 	GlobalState *_globalState;
 	TriggerButtonTask triggerButton;
 	GripButtonTask gripButton;
 	PowerOffTask powerOffTask;
 	HeartRateTask heartRateTask;
+	LeptonTask leptonTask;
 public:
 	bool IsActive();
 	bool IsGlobalActive();

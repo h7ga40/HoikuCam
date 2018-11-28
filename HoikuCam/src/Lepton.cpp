@@ -56,19 +56,13 @@ LeptonTask::LeptonTask(SensorTask *sensorTask) :
 	_ss(P5_8),
 	//_ss(P4_5),
 	resets(0),
+	_minValue(65535), _maxValue(0),
 	_packet_per_frame(60)
 {
 }
 
 LeptonTask::~LeptonTask()
 {
-}
-
-void LeptonTask::Init()
-{
-	_spi.format(8, 3/*?*/);
-	//_spi.frequency(20000000);
-	_spi.frequency(16000000);
 }
 
 void LeptonTask::command(unsigned int moduleID, unsigned int commandID, unsigned int command)
@@ -176,10 +170,12 @@ void LeptonTask::OnStart()
 {
 	uint8_t data[32];
 
+	_spi.format(8, 3/*?*/);
+	//_spi.frequency(20000000);
+	_spi.frequency(16000000);
+
 	_ss = 1;
-
 	_ss = 0;
-
 	_ss = 1;
 
 	Thread::wait(185);
@@ -248,16 +244,14 @@ void LeptonTask::OnStart()
 	printf("VID Focus ROI Select\n");
 	command(/*VID*/0x03, 0x10>>2, GET);
 	read_data(data, sizeof(data));
-
-	_timer = 500;
-	_state = State::Capture;
 }
 
 void LeptonTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::PowerOn) != 0) {
-		_state = State::Capture;
-		_timer = 0;
+		_ss = 0;
+		_state = State::Resets;
+		_timer = 750;
 	}
 	if ((signals & InterTaskSignals::PowerOff) != 0) {
 		_state = State::PowerOff;
@@ -270,8 +264,9 @@ void LeptonTask::Process()
 	uint8_t *result = _frame_packet;
 	uint16_t *frameBuffer;
 	uint16_t value, minValue, maxValue;
-	float diff, scale;
+	//float diff, scale;
 	int packet_id;
+	uint16_t *values = _image;
 
 	if (_timer != 0)
 		return;
@@ -288,10 +283,12 @@ void LeptonTask::Process()
 		packet_id = -1;
 		for (int row = 0; row < PACKETS_PER_FRAME; )
 		{
+			_spi.lock();
 			_ss = 0;
 			//read data packets from lepton over SPI
 			_spi.write(NULL, 0, (char *)result, PACKET_SIZE);
 			_ss = 1;
+			_spi.unlock();
 
 			int id = (result[0] << 8) | result[1];
 			if (id == packet_id) {
@@ -316,7 +313,7 @@ void LeptonTask::Process()
 			}
 			packet_id = id;
 
-			uint16_t *pixel = &image[PIXEL_PER_LINE * row];
+			uint16_t *pixel = &_image[PIXEL_PER_LINE * row];
 			frameBuffer = (uint16_t *)result;
 			//skip the first 2 uint16_t's of every packet, they're 4 header bytes
 			for (int i = 2; i < PACKET_SIZE_UINT16; i++) {
@@ -352,19 +349,19 @@ void LeptonTask::Process()
 		break;
 	case State::Viewing:
 		//lets emit the signal for update
-		minValue = _minValue;
-		diff = _maxValue - minValue;
-		scale = 255.9 / diff;
+		//minValue = _minValue;
+		//diff = _maxValue - minValue;
+		//scale = 255.9 / diff;
 		for (int row = 0; row < PACKETS_PER_FRAME; row++) {
-			uint16_t *values = &image[PIXEL_PER_LINE * row];
-			uint16_t *pixel = (uint16_t *)&user_frame_buffer_result[RESULT_BUFFER_BYTE_PER_PIXEL * LCD_PIXEL_WIDTH * row];
+			uint16_t *pixel = &((uint16_t *)&user_frame_buffer_result)[(LCD_PIXEL_WIDTH - PIXEL_PER_LINE) + (LCD_PIXEL_HEIGHT - PACKETS_PER_FRAME + row) * LCD_PIXEL_WIDTH];
 			for (int column = 0; column < PIXEL_PER_LINE; column++) {
 				//uint8_t index = (*values - minValue) * scale;
 				//uint8_t index = *values;
 				uint8_t index = (uint8_t)(*values >> 1);
 				const uint8_t *colormap = &colormap_rainbow[3 * index];
 				// ARGB4444
-				*pixel++ = 0xF000 | ((*colormap++ >> 4) << 16) | ((*colormap++ >> 4) << 8) | ((*colormap++ >> 4) << 0);
+				*pixel++ = 0xF000 | ((colormap[0] >> 4) << 8) | ((colormap[1] >> 4) << 4) | ((colormap[2] >> 4) << 0);
+				values++;
 			}
 		}
 
@@ -380,6 +377,10 @@ void LeptonTask::Process()
 			_state = State::Capture;
 			_timer = 100;
 		}
+		break;
+	default:
+		_state = State::PowerOff;
+		_timer = osWaitForever;
 		break;
 	}
 }

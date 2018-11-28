@@ -37,7 +37,7 @@ private:
 	uint16_t _minValue, _maxValue;
 	int _packet_per_frame;
 	uint8_t _frame_packet[PACKET_SIZE];
-	uint16_t image[IMAGE_SIZE];
+	uint16_t _image[IMAGE_SIZE];
 	int spi_read_word(int data);
 	void command(unsigned int moduleID, unsigned int commandID, unsigned int command);
 	void agc_enable();
@@ -45,7 +45,6 @@ private:
 	int read_reg(unsigned int reg);
 	int read_data(uint8_t *data, int len);
 public:
-	void Init();
 	void OnStart() override;
 	void ProcessEvent(InterTaskSignals::T signals) override;
 	void Process() override;
