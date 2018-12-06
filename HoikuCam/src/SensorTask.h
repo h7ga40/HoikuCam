@@ -123,19 +123,29 @@ public:
 	virtual ~SensorTask();
 private:
 	Tasks _task;
-	ITask *_tasks[5];
+	ITask *_tasks[4];
 	GlobalState *_globalState;
 	TriggerButtonTask triggerButton;
 	GripButtonTask gripButton;
 	PowerOffTask powerOffTask;
 	HeartRateTask heartRateTask;
-	LeptonTask leptonTask;
 public:
 	bool IsActive();
 	bool IsGlobalActive();
 	void PowerOff();
 	void PowerOn();
 	void TriggerOn();
+};
+
+class LeptonTaskThread : public TaskThread
+{
+public:
+	LeptonTaskThread(GlobalState *globalState);
+	virtual ~LeptonTaskThread();
+private:
+	GlobalState *_globalState;
+	LeptonTask leptonTask;
+public:
 };
 
 #endif // _SENSORTASK_H_

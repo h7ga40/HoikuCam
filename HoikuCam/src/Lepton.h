@@ -9,7 +9,7 @@
 #define PIXEL_PER_LINE (80)
 #define IMAGE_SIZE (PIXEL_PER_LINE * PACKETS_PER_FRAME)
 
-class SensorTask;
+class TaskThread;
 
 class LeptonTask : public Task
 {
@@ -25,17 +25,17 @@ public:
 		};
 	};
 public:
-	LeptonTask(SensorTask *sensorTask);
+	LeptonTask(TaskThread *taskThread);
 	virtual ~LeptonTask();
 private:
 	State::T _state;
-	SensorTask *_sensorTask;
+	TaskThread *_taskThread;
 	mbed::SPI _spi;
 	mbed::I2C _wire;
 	mbed::DigitalOut _ss;
 	int resets;
 	uint16_t _minValue, _maxValue;
-	int _packet_per_frame;
+	int _packets_per_frame;
 	uint8_t _frame_packet[PACKET_SIZE];
 	uint16_t _image[IMAGE_SIZE];
 	int spi_read_word(int data);

@@ -58,6 +58,7 @@ void GlobalState::PowerOff()
 	mediaTask->Signal(InterTaskSignals::PowerOff);
 	sensorTask->Signal(InterTaskSignals::PowerOff);
 	faceDetectTask->Signal(InterTaskSignals::PowerOff);
+	leptonTask->Signal(InterTaskSignals::PowerOff);
 }
 
 void GlobalState::PowerOn()
@@ -66,6 +67,7 @@ void GlobalState::PowerOn()
 	mediaTask->Signal(InterTaskSignals::PowerOn);
 	sensorTask->Signal(InterTaskSignals::PowerOn);
 	faceDetectTask->Signal(InterTaskSignals::PowerOn);
+	leptonTask->Signal(InterTaskSignals::PowerOn);
 }
 
 void GlobalState::TriggerOn()

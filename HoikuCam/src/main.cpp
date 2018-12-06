@@ -28,9 +28,11 @@ static MediaTask mediaTask(&globalState, &faceDetectTask.face_roi);
 static SensorTask sensorTask(&globalState);
 static ESP32Interface wifi(P5_3, P3_14, P7_1, P0_1);
 static NetTask netTask(&globalState, &wifi);
+static LeptonTaskThread leptonTask(&globalState);
 
 extern "C" void _kill()
 {
+	mbed_die();
 }
 
 extern "C" int _getpid()
@@ -271,7 +273,7 @@ bool ReadIniFile(std::string filename)
 	XML_SetElementHandler(parser, start, end);
 	XML_SetCharacterDataHandler(parser, text);
 
-	int len;
+	size_t len;
 	FILE *fp = fopen(filename.c_str(), "rb");
 	if (fp != NULL){
 		for (;;) {
@@ -281,7 +283,7 @@ bool ReadIniFile(std::string filename)
 
 			if((config.state != psError) && (XML_Parse(parser, (char *)temp, len, 0) == 0)) {
 				XML_Error error_code = XML_GetErrorCode(parser);
-				printf("Parsing response buffer of size %lu failed"
+				printf("Parsing response buffer of size %lid failed"
 					" with error code %d (%s).\n",
 					len, error_code, XML_ErrorString(error_code));
 				config.state = psError;
@@ -304,6 +306,7 @@ int main(void)
 	globalState.mediaTask = &mediaTask;
 	globalState.faceDetectTask = &faceDetectTask;
 	globalState.sensorTask = &sensorTask;
+	globalState.leptonTask = &leptonTask;
 
 	globalState.storage->wait_connect();
 
@@ -317,6 +320,7 @@ int main(void)
 	sensorTask.Start();
 	mediaTask.Start();
 	faceDetectTask.Start();
+	leptonTask.Start();
 
 	us_timestamp_t now, org = ticker_read_us(get_us_ticker_data());
 	while (true) {

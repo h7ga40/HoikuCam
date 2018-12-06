@@ -305,14 +305,12 @@ SensorTask::SensorTask(GlobalState *globalState) :
 	triggerButton(this),
 	gripButton(this),
 	powerOffTask(this),
-	heartRateTask(this),
-	leptonTask(this)
+	heartRateTask(this)
 {
 	_tasks[0] = &triggerButton;
 	_tasks[1] = &gripButton;
 	_tasks[2] = &powerOffTask;
 	_tasks[3] = &heartRateTask;
-	_tasks[4] = &leptonTask;
 }
 
 SensorTask::~SensorTask()
@@ -343,4 +341,15 @@ void SensorTask::TriggerOn()
 {
 	_globalState->MakeFilePath();
 	_globalState->TriggerOn();
+}
+
+LeptonTaskThread::LeptonTaskThread(GlobalState *globalState) :
+	TaskThread(&leptonTask),
+	_globalState(globalState),
+	leptonTask(this)
+{
+}
+
+LeptonTaskThread::~LeptonTaskThread()
+{
 }

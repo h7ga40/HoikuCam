@@ -46,10 +46,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define RESULT_BUFFER_HEIGHT          (LCD_PIXEL_HEIGHT)
 extern uint8_t user_frame_buffer_result[RESULT_BUFFER_STRIDE * RESULT_BUFFER_HEIGHT]__attribute((section("NC_BSS"), aligned(32)));
 
-LeptonTask::LeptonTask(SensorTask *sensorTask) :
+LeptonTask::LeptonTask(TaskThread *taskThread) :
 	Task(osWaitForever),
 	_state(State::PowerOff),
-	_sensorTask(sensorTask),
+	_taskThread(taskThread),
 	_spi(P5_6, P5_7, P5_4, NC),
 	//_spi(P4_6, P4_7, P4_4, NC),
 	_wire(I2C_SDA, I2C_SCL),
@@ -57,7 +57,7 @@ LeptonTask::LeptonTask(SensorTask *sensorTask) :
 	//_ss(P4_5),
 	resets(0),
 	_minValue(65535), _maxValue(0),
-	_packet_per_frame(60)
+	_packets_per_frame(60)
 {
 }
 
@@ -235,10 +235,10 @@ void LeptonTask::OnStart()
 
 	int telemetory = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
 	if (telemetory != 0) {
-		_packet_per_frame = 63;
+		_packets_per_frame = 63;
 	}
 	else {
-		_packet_per_frame = 60;
+		_packets_per_frame = 60;
 	}
 
 	printf("VID Focus ROI Select\n");
@@ -266,7 +266,7 @@ void LeptonTask::Process()
 	uint16_t value, minValue, maxValue;
 	//float diff, scale;
 	int packet_id;
-	uint16_t *values = _image;
+	uint16_t *values;
 
 	if (_timer != 0)
 		return;
@@ -281,8 +281,7 @@ void LeptonTask::Process()
 		minValue = 65535;
 		maxValue = 0;
 		packet_id = -1;
-		for (int row = 0; row < PACKETS_PER_FRAME; )
-		{
+		for (int row = 0; row < _packets_per_frame; ) {
 			_spi.lock();
 			_ss = 0;
 			//read data packets from lepton over SPI
@@ -313,22 +312,24 @@ void LeptonTask::Process()
 			}
 			packet_id = id;
 
-			uint16_t *pixel = &_image[PIXEL_PER_LINE * row];
-			frameBuffer = (uint16_t *)result;
-			//skip the first 2 uint16_t's of every packet, they're 4 header bytes
-			for (int i = 2; i < PACKET_SIZE_UINT16; i++) {
-				//flip the MSB and LSB at the last second
-				value = frameBuffer[i];
-				value = (value >> 8) | (value << 8);
-				//frameBuffer[i] = value;
+			if (row < PACKETS_PER_FRAME) {
+				uint16_t *pixel = &_image[PIXEL_PER_LINE * row];
+				frameBuffer = (uint16_t *)result;
+				//skip the first 2 uint16_t's of every packet, they're 4 header bytes
+				for (int i = 2; i < PACKET_SIZE_UINT16; i++) {
+					//flip the MSB and LSB at the last second
+					value = frameBuffer[i];
+					value = (value >> 8) | (value << 8);
+					//frameBuffer[i] = value;
 
-				if (value > maxValue) {
-					maxValue = value;
+					if (value > maxValue) {
+						maxValue = value;
+					}
+					if (value < minValue) {
+						minValue = value;
+					}
+					*pixel++ = value;
 				}
-				if (value < minValue) {
-					minValue = value;
-				}
-				*pixel++ = value;
 			}
 
 			row++;
@@ -352,6 +353,7 @@ void LeptonTask::Process()
 		//minValue = _minValue;
 		//diff = _maxValue - minValue;
 		//scale = 255.9 / diff;
+		values = _image;
 		for (int row = 0; row < PACKETS_PER_FRAME; row++) {
 			uint16_t *pixel = &((uint16_t *)&user_frame_buffer_result)[(LCD_PIXEL_WIDTH - PIXEL_PER_LINE) + (LCD_PIXEL_HEIGHT - PACKETS_PER_FRAME + row) * LCD_PIXEL_WIDTH];
 			for (int column = 0; column < PIXEL_PER_LINE; column++) {

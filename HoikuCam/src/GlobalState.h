@@ -10,6 +10,7 @@ class SensorTask;
 class NetTask;
 class MediaTask;
 class FaceDetectTask;
+class LeptonTaskThread;
 
 class GlobalState
 {
@@ -23,12 +24,14 @@ public:
 	NetTask *netTask;
 	MediaTask *mediaTask;
 	FaceDetectTask *faceDetectTask;
+	LeptonTaskThread *leptonTask;
 	std::string _path;
 public:
 	bool IsActive();
 	void MakeFilePath();
 	std::string GetFilePath();
 	void UpdateRequest();
+	void UploadRequest(std::string filename);
 	void PowerOff();
 	void PowerOn();
 	void TriggerOn();
