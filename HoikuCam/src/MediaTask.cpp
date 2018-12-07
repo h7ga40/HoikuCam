@@ -118,7 +118,7 @@ static void disp_audio_wave(int16_t * p_data, int32_t size, uint32_t color) {
 #define AUDIO_OUT_BUF_NUM		(8)
 
 static uint8_t audio_in_buf[AUDIO_IN_BUF_NUM][AUDIO_IN_BUF_SIZE]__attribute((section("NC_BSS"), aligned(4)));
-//static uint8_t audio_out_buf[AUDIO_OUT_BUF_NUM][AUDIO_OUT_BUF_SIZE]__attribute((section("NC_BSS"), aligned(4)));
+static uint8_t audio_out_buf[AUDIO_OUT_BUF_NUM][AUDIO_OUT_BUF_SIZE]__attribute((section("NC_BSS"), aligned(4)));
 #if CHANNEL_NUM == 1
 static uint8_t audio_file_buf[AUDIO_IN_BUF_SIZE / 2];
 #endif
@@ -162,6 +162,10 @@ AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi) :
 	pcm_size(0),
 	_rec_signal(false),
 	audio_read_data(),
+	audio_write_data(),
+	_out_ridx(0),
+	_out_widx(0),
+	shutter_fp(NULL),
 	mails(),
 	mutex(),
 	_face_roi(face_roi)
@@ -183,6 +187,9 @@ void AudioTask::OnStart()
 			printf("read error\n");
 		}
 	}
+
+	audio_write_data.p_app_data = this;
+	audio_write_data.p_notify_func = callback_audio_write_end;
 }
 
 void AudioTask::AudioReadEnd(void *p_data, int result)
@@ -214,6 +221,24 @@ void AudioTask::AudioReadEnd(void *p_data, int result)
 	_owner->RecAudio();
 }
 
+void AudioTask::AudioWriteEnd(void *p_data, int result)
+{
+	(void)p_data;
+	(void)result;
+
+	if (_out_ridx == _out_widx) {
+		_owner->EndShutter();
+		return;
+	}
+
+	_out_ridx++;
+	if (_out_ridx >= AUDIO_OUT_BUF_NUM) {
+		_out_ridx = 0;
+	}
+
+	_owner->StartShutter();
+}
+
 void AudioTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::PowerOn) != 0) {
@@ -233,9 +258,44 @@ void AudioTask::ProcessEvent(InterTaskSignals::T signals)
 			_state = State::Recording;
 			_timer = 10 * 1000;
 		}
+		file = "/storage/shutter.wav";
+		shutter_fp = fopen(file.c_str(), "rb");
+		if (shutter_fp != NULL) {
+			audio.outputVolume(1.00, 1.00);
+			fseek(shutter_fp, sizeof(wav_header_tbl), SEEK_SET);
+			signals = (InterTaskSignals::T)(signals | InterTaskSignals::StartShutter);
+			printf("StartShutter w%d == r%d\n", _out_widx, _out_ridx);
+		}
 	}
 	if ((signals & InterTaskSignals::RecAudio) != 0) {
 		_rec_signal = true;
+	}
+	if ((signals & InterTaskSignals::StartShutter) != 0) {
+		int ridx = _out_ridx;
+		if (ridx <= 0) ridx = AUDIO_OUT_BUF_NUM - 1; else ridx--;
+		if (shutter_fp != NULL) do {
+			uint8_t *buf = audio_out_buf[_out_widx];
+			size_t size = fread(buf, sizeof(char), AUDIO_OUT_BUF_SIZE, shutter_fp);
+			if (size == 0) {
+				fclose(shutter_fp);
+				shutter_fp = NULL;
+				break;
+			}
+			else {
+				if (size < AUDIO_OUT_BUF_SIZE) {
+					memset(&buf[size], 0, AUDIO_OUT_BUF_SIZE - size);
+				}
+				audio.write(buf, AUDIO_OUT_BUF_SIZE, &audio_write_data);
+				_out_widx++;
+				if (_out_widx >= AUDIO_OUT_BUF_NUM) {
+					_out_widx = 0;
+				}
+			}
+		} while (_out_widx != ridx);
+	}
+	if ((signals & InterTaskSignals::EndShutter) != 0) {
+		printf("EndShutter w%d == r%d\n", _out_widx, _out_ridx);
+		audio.outputVolume(0.0, 0.0);
 	}
 	if ((signals & InterTaskSignals::PowerOff) != 0) {
 		if (_state == State::Idle) {
@@ -429,6 +489,16 @@ bool MediaTask::IsActive()
 void MediaTask::RecAudio()
 {
 	Signal(InterTaskSignals::RecAudio);
+}
+
+void MediaTask::StartShutter()
+{
+	Signal(InterTaskSignals::StartShutter);
+}
+
+void MediaTask::EndShutter()
+{
+	Signal(InterTaskSignals::EndShutter);
 }
 
 void MediaTask::UpdateRequest()

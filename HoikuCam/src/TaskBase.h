@@ -6,14 +6,16 @@ class InterTaskSignals
 {
 public:
 	enum T {
-		WifiStatusChanged = 0x01,
-		WifiConnected = 0x2,
-		PowerOn = 0x04,
-		TriggerOn = 0x08,
-		RecAudio = 0x10,
-		UpdateRequest = 0x20,
-		PowerOff = 0x40,
-		HeartRateInt = 0x80,
+		WifiStatusChanged = 0x0001,
+		WifiConnected = 0x0002,
+		PowerOn = 0x0004,
+		TriggerOn = 0x0008,
+		RecAudio = 0x0010,
+		UpdateRequest = 0x0020,
+		PowerOff = 0x0040,
+		HeartRateInt = 0x0080,
+		StartShutter = 0x0100,
+		EndShutter = 0x0200,
 	};
 };
 

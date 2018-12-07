@@ -40,6 +40,10 @@ private:
 	int pcm_size;
 	bool _rec_signal;
 	rbsp_data_conf_t audio_read_data;
+	rbsp_data_conf_t audio_write_data;
+	int _out_ridx;
+	int _out_widx;
+	FILE *shutter_fp;
 	std::list<mail_t> mails;
 	rtos::Mutex mutex;
 	cv::Rect *_face_roi;
@@ -47,6 +51,10 @@ private:
 	void AudioReadEnd(void *p_data, int result);
 	static void callback_audio_read_end(void *p_data, int32_t result, void *p_app_data) {
 		((AudioTask *)p_app_data)->AudioReadEnd(p_data, result);
+	}
+	void AudioWriteEnd(void *p_data, int result);
+	static void callback_audio_write_end(void *p_data, int32_t result, void *p_app_data) {
+		((AudioTask *)p_app_data)->AudioWriteEnd(p_data, result);
 	}
 	static void wire_data_4byte(uint32_t data, FILE *fp);
 public:
@@ -102,6 +110,8 @@ public:
 			|| (visualTask.GetState() == VisualTask::State::Recording);
 	}
 	void RecAudio();
+	void StartShutter();
+	void EndShutter();
 	void UpdateRequest();
 };
 
