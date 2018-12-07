@@ -460,15 +460,47 @@ void VisualTask::Process()
 	_timer = osWaitForever;
 }
 
+VibratorTask::VibratorTask(MediaTask *owner) :
+	Task(osWaitForever),
+	_state(State::Off),
+	_vibrator(P5_10)
+{
+}
+
+VibratorTask::~VibratorTask()
+{
+}
+
+void VibratorTask::ProcessEvent(InterTaskSignals::T signals)
+{
+	if ((signals & InterTaskSignals::TriggerOn) != 0) {
+		_vibrator = 1;
+		_state = State::On;
+		_timer = 10;
+	}
+}
+
+void VibratorTask::Process()
+{
+	if (_timer != 0)
+		return;
+
+	_vibrator = 0;
+	_state = State::Off;
+	_timer = osWaitForever;
+}
+
 MediaTask::MediaTask(GlobalState *globalState, cv::Rect *face_roi) :
 	TaskThread(&_task),
 	_task(_tasks, sizeof(_tasks) / sizeof(_tasks[0])),
 	_globalState(globalState),
 	audioTask(this, face_roi),
-	visualTask(this)
+	visualTask(this),
+	vibratorTask(this)
 {
 	_tasks[0] = &visualTask;
 	_tasks[1] = &audioTask;
+	_tasks[2] = &vibratorTask;
 }
 
 MediaTask::~MediaTask()

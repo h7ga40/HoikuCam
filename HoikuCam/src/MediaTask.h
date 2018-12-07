@@ -89,6 +89,30 @@ public:
 	void Process() override;
 };
 
+class VibratorTask : public Task
+{
+public:
+	class State
+	{
+	public:
+		enum T {
+			Off,
+			On,
+		};
+	};
+public:
+	VibratorTask(MediaTask *owner);
+	virtual ~VibratorTask();
+private:
+	MediaTask *_owner;
+	State::T _state;
+	mbed::DigitalOut _vibrator;
+public:
+	State::T GetState() { return _state; }
+	void ProcessEvent(InterTaskSignals::T signals) override;
+	void Process() override;
+};
+
 class GlobalState;
 
 class MediaTask : public TaskThread
@@ -98,10 +122,11 @@ public:
 	virtual ~MediaTask();
 private:
 	Tasks _task;
-	ITask *_tasks[2];
+	ITask *_tasks[3];
 	GlobalState *_globalState;
 	AudioTask audioTask;
 	VisualTask visualTask;
+	VibratorTask vibratorTask;
 public:
 	std::string GetFilePath();
 	bool IsActive();
