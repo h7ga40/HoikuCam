@@ -49,6 +49,29 @@ ESP32InterfaceAP::ESP32InterfaceAP(PinName tx, PinName rx, bool debug) :
 {
 }
 
+#ifdef ARDUINO
+ESP32InterfaceAP::ESP32InterfaceAP() :
+#ifdef GRLYCHEE
+    ESP32Stack(P5_3, P3_14, P7_1, P0_1, false, NC, NC, 230400),
+#elif defined(GRPEACH)
+    ESP32Stack(P3_10, P3_9, P2_14, P2_15, false, NC, NC, 230400),
+#else
+#error "no target"
+#endif
+    _dhcp(true),
+    _own_ch(1),
+    _own_ssid(),
+    _own_pass(),
+    _own_sec(NSAPI_SECURITY_NONE),
+    _ip_address(),
+    _netmask(),
+    _gateway(),
+    _connection_status(NSAPI_STATUS_DISCONNECTED),
+    _connection_status_cb(NULL)
+{
+}
+#endif
+
 nsapi_error_t ESP32InterfaceAP::set_network(const char *ip_address, const char *netmask, const char *gateway)
 {
     _dhcp = false;

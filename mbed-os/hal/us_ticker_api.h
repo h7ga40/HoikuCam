@@ -102,7 +102,7 @@ extern "C" {
  * @ingroup hal_lp_ticker
  */
 
- 
+
 typedef void (*ticker_irq_handler_type)(const ticker_data_t *const);
 
 /** Set ticker IRQ handler
@@ -121,7 +121,7 @@ ticker_irq_handler_type set_us_ticker_irq_handler(ticker_irq_handler_type ticker
  *
  * @return The microsecond ticker data
  */
-const ticker_data_t* get_us_ticker_data(void);
+const ticker_data_t *get_us_ticker_data(void);
 
 
 /** The wrapper for ticker_irq_handler, to pass us ticker's data
@@ -170,6 +170,25 @@ void us_ticker_init(void);
  * except us_ticker_init(), calling any function other than init is undefined.
  *
  * @note This function stops the ticker from counting.
+ *
+ * Pseudo Code:
+ * @code
+ * uint32_t us_ticker_free()
+ * {
+ *     // Disable timer
+ *     TIMER_CTRL &= ~TIMER_CTRL_ENABLE_Msk;
+ *
+ *     // Disable the compare interrupt
+ *     TIMER_CTRL &= ~TIMER_CTRL_COMPARE_ENABLE_Msk;
+ *
+ *     // Disable timer interrupt
+ *     NVIC_DisableIRQ(TIMER_IRQn);
+ *
+ *     // Disable clock gate so processor cannot read TIMER registers
+ *     POWER_CTRL &= ~POWER_CTRL_TIMER_Msk;
+ * }
+ * @endcode
+ *
  */
 void us_ticker_free(void);
 
@@ -269,7 +288,7 @@ void us_ticker_fire_interrupt(void);
  * }
  * @endcode
  */
-const ticker_info_t* us_ticker_get_info(void);
+const ticker_info_t *us_ticker_get_info(void);
 
 /**@}*/
 

@@ -201,7 +201,7 @@ bool ATCmdParser::vsend(const char *command, va_list args)
         }
     }
 
-    debug_if(_dbg_on, "AT> %s\n", _buffer);
+    debug_if(_dbg_on, "AT> %s\r\n", _buffer);
     return true;
 }
 
@@ -241,7 +241,7 @@ restart:
         _buffer[offset++] = 'n';
         _buffer[offset++] = 0;
 
-        debug_if(_dbg_on, "AT? %s\n", _buffer);
+        debug_if(_dbg_on, "AT? %s\r\n", _buffer);
         // To workaround scanf's lack of error reporting, we actually
         // make two passes. One checks the validity with the modified
         // format string that only stores the matched characters (%n).
@@ -255,7 +255,7 @@ restart:
             // Receive next character
             int c = getc();
             if (c < 0) {
-                debug_if(_dbg_on, "AT(Timeout)\n");
+                debug_if(_dbg_on, "AT(Timeout)\r\n");
                 return false;
             }
             // Simplify newlines (borrowed from retarget.cpp)
@@ -278,11 +278,11 @@ restart:
             for (struct oob *oob = _oobs; oob; oob = oob->next) {
                 if ((unsigned)j == oob->len && memcmp(
                         oob->prefix, _buffer+offset, oob->len) == 0) {
-                    debug_if(_dbg_on, "AT! %s\n", oob->prefix);
+                    debug_if(_dbg_on, "AT! %s\r\n", oob->prefix);
                     oob->cb();
 
                     if (_aborted) {
-                        debug_if(_dbg_on, "AT(Aborted)\n");
+                        debug_if(_dbg_on, "AT(Aborted)\r\n");
                         return false;
                     }
                     // oob may have corrupted non-reentrant buffer,
@@ -303,7 +303,7 @@ restart:
 
             // We only succeed if all characters in the response are matched
             if (count == j) {
-                debug_if(_dbg_on, "AT= %s\n", _buffer+offset);
+                debug_if(_dbg_on, "AT= %s\r\n", _buffer+offset);
                 // Reuse the front end of the buffer
                 memcpy(_buffer, response, i);
                 _buffer[i] = 0;

@@ -21,6 +21,7 @@
 #include "mbed_error.h"
 #include "mbed_debug.h"
 #include "mbed_stats.h"
+#include "us_ticker_api.h"
 #include "lp_ticker_api.h"
 #include <limits.h>
 #include <stdio.h>
@@ -82,7 +83,7 @@ typedef struct sleep_statistic {
 
 static sleep_statistic_t sleep_stats[STATISTIC_COUNT];
 
-static sleep_statistic_t* sleep_tracker_find(const char *const filename)
+static sleep_statistic_t *sleep_tracker_find(const char *const filename)
 {
     for (int i = 0; i < STATISTIC_COUNT; ++i) {
         if (sleep_stats[i].identifier == filename) {
@@ -93,7 +94,7 @@ static sleep_statistic_t* sleep_tracker_find(const char *const filename)
     return NULL;
 }
 
-static sleep_statistic_t* sleep_tracker_add(const char* const filename)
+static sleep_statistic_t *sleep_tracker_add(const char *const filename)
 {
     for (int i = 0; i < STATISTIC_COUNT; ++i) {
         if (sleep_stats[i].identifier == NULL) {
@@ -121,7 +122,7 @@ static void sleep_tracker_print_stats(void)
         }
 
         debug("[id: %s, count: %u]\r\n", sleep_stats[i].identifier,
-                                         sleep_stats[i].count);
+              sleep_stats[i].count);
     }
 }
 
@@ -139,7 +140,7 @@ void sleep_tracker_lock(const char *const filename, int line)
     debug("LOCK: %s, ln: %i, lock count: %u\r\n", filename, line, deep_sleep_lock);
 }
 
-void sleep_tracker_unlock(const char* const filename, int line)
+void sleep_tracker_unlock(const char *const filename, int line)
 {
     sleep_statistic_t *stat = sleep_tracker_find(filename);
 
@@ -181,6 +182,19 @@ void sleep_manager_unlock_deep_sleep_internal(void)
 bool sleep_manager_can_deep_sleep(void)
 {
     return deep_sleep_lock == 0 ? true : false;
+}
+
+bool sleep_manager_can_deep_sleep_test_check()
+{
+    const uint32_t check_time_us = 2000;
+    const ticker_data_t *const ticker = get_us_ticker_data();
+    uint32_t start = ticker_read(ticker);
+    while ((ticker_read(ticker) - start) < check_time_us) {
+        if (sleep_manager_can_deep_sleep()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void sleep_manager_sleep_auto(void)

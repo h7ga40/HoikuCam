@@ -33,6 +33,7 @@ typedef enum crc_polynomial {
     POLY_16BIT_CCITT = 0x1021,     // x16+x12+x5+1
     POLY_16BIT_IBM   = 0x8005,     // x16+x15+x2+1
     POLY_32BIT_ANSI  = 0x04C11DB7, // x32+x26+x23+x22+x16+x12+x11+x10+x8+x7+x5+x4+x2+x+1
+    POLY_32BIT_REV_ANSI = 0xEDB88320
 } crc_polynomial_t;
 
 typedef struct crc_mbed_config {
@@ -145,7 +146,7 @@ extern "C" {
  *
  * \return  True if running if the polynomial is supported, false if not.
  */
-bool hal_crc_is_supported(const crc_mbed_config_t* config);
+bool hal_crc_is_supported(const crc_mbed_config_t *config);
 
 /** Initialize the hardware CRC module with the given polynomial
  *
@@ -177,7 +178,7 @@ bool hal_crc_is_supported(const crc_mbed_config_t* config);
  *               hardware CRC module. For example, polynomial and initial seed
  *               values.
  */
-void hal_crc_compute_partial_start(const crc_mbed_config_t* config);
+void hal_crc_compute_partial_start(const crc_mbed_config_t *config);
 
 /** Writes data to the current CRC module.
  *

@@ -28,6 +28,20 @@
 #include "platform/SingletonPtr.h"
 #include "platform/PlatformMutex.h"
 #include "platform/NonCopyable.h"
+#include <algorithm>
+
+// Export ROM end address
+#if defined(TOOLCHAIN_GCC_ARM)
+extern uint32_t __etext;
+#define FLASHIAP_ROM_END ((uint32_t) &__etext)
+#elif defined(TOOLCHAIN_ARM)
+extern uint32_t Load$$LR$$LR_IROM1$$Limit[];
+#define FLASHIAP_ROM_END ((uint32_t)Load$$LR$$LR_IROM1$$Limit)
+#elif defined(TOOLCHAIN_IAR)
+#pragma section=".rodata"
+#pragma section=".text"
+#define FLASHIAP_ROM_END (std::max((uint32_t) __section_end(".rodata"), (uint32_t) __section_end(".text")))
+#endif
 
 namespace mbed {
 
@@ -56,7 +70,7 @@ public:
      */
     int deinit();
 
-    /** Read data from a flash device. 
+    /** Read data from a flash device.
      *
      *  This method invokes memcpy - reads number of bytes from the address
      *
@@ -90,7 +104,7 @@ public:
 
     /** Get the sector size at the defined address
      *
-     *  Sector size might differ at address ranges. 
+     *  Sector size might differ at address ranges.
      *  An example <0-0x1000, sector size=1024; 0x10000-0x20000, size=2048>
      *
      *  @param addr Address of or inside the sector to query
@@ -98,15 +112,15 @@ public:
      */
     uint32_t get_sector_size(uint32_t addr) const;
 
-    /** Get the flash start address 
+    /** Get the flash start address
      *
-     *  @return Flash start address 
+     *  @return Flash start address
      */
     uint32_t get_flash_start() const;
 
     /** Get the flash size
      *
-     *  @return Flash size 
+     *  @return Flash size
      */
     uint32_t get_flash_size() const;
 

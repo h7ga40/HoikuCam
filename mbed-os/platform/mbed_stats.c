@@ -1,6 +1,7 @@
 #include "mbed_assert.h"
 #include "mbed_stats.h"
 #include "mbed_power_mgmt.h"
+#include "mbed_version.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -40,7 +41,10 @@ void mbed_stats_stack_get(mbed_stats_stack_t *stats)
     osThreadId_t *threads;
 
     threads = malloc(sizeof(osThreadId_t) * thread_n);
-    MBED_ASSERT(threads != NULL);
+    // Don't fail on lack of memory
+    if (!threads) {
+        return;
+    }
 
     osKernelLock();
     thread_n = osThreadEnumerate(threads, thread_n);
@@ -68,7 +72,10 @@ size_t mbed_stats_stack_get_each(mbed_stats_stack_t *stats, size_t count)
     osThreadId_t *threads;
 
     threads = malloc(sizeof(osThreadId_t) * count);
-    MBED_ASSERT(threads != NULL);
+    // Don't fail on lack of memory
+    if (!threads) {
+        return 0;
+    }
 
     osKernelLock();
     count = osThreadEnumerate(threads, count);
@@ -123,6 +130,7 @@ void mbed_stats_sys_get(mbed_stats_sys_t *stats)
     memset(stats, 0, sizeof(mbed_stats_sys_t));
 
 #if defined(MBED_SYS_STATS_ENABLED)
+    stats->os_version = MBED_VERSION;
 #if defined(__CORTEX_M)
     stats->cpu_id = SCB->CPUID;
 #endif

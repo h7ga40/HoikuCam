@@ -86,8 +86,10 @@ public:
         I2C mI2c_(I2C_SDA, I2C_SCL);
         mI2c_.frequency(150000);
 
-        mI2c_.write(0x42, sw_reset_cmd, 2);
-        Thread::wait(1);
+        if (mI2c_.write(0x42, sw_reset_cmd, 2) != 0) {
+            return false;
+        }
+        ThisThread::sleep_for(1);
 
         for (uint32_t i = 0; i < (sizeof(OV7725_InitRegTable) / 2) ; i++) {
             ret = mI2c_.write(0x42, OV7725_InitRegTable[i], 2);
@@ -120,7 +122,7 @@ public:
      *
      * @param[in]      bAuto             : Automatic adjustment ON/OFF(AEC/AGC)
      * @param[in]      usManualExposure  : Exposure time at automatic adjustment OFF  (number of lines)
-     * @param[in]      usManualGain      : Gain at automatic adjustment OFF �i0x00-0xFF)
+     * @param[in]      usManualGain      : Gain at automatic adjustment OFF （0x00-0xFF)
      * @return true = success, false = failure
      */
     static bool SetExposure(bool bAuto, uint16_t usManualExposure, uint8_t usManualGain) {

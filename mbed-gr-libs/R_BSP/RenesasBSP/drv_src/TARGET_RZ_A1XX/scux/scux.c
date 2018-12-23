@@ -751,7 +751,7 @@ void SCUX_UnInitializeOne(const int_t channel)
             {
                 /* NON_NOTICE_ASSERT: SCUX stop failed */
             }
-            
+
             ercd = R_DMA_Free(gb_scux_info_drv.info_ch[scux_ch_count].dma_tx_ch, NULL);
             if (ESUCCESS != ercd)
             {

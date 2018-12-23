@@ -216,4 +216,3 @@ void lcd_drawString(const char *string, int x, int y, uint16_t color, uint16_t b
 		local_x += FONT_WIDTH;
 	}
 }
-

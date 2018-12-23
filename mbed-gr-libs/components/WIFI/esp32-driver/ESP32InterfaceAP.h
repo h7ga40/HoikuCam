@@ -47,6 +47,10 @@ public:
      */
     ESP32InterfaceAP(PinName tx, PinName rx, bool debug = false);
 
+#ifdef ARDUINO
+    ESP32InterfaceAP();
+#endif
+
     /** Set a static IP address
      *
      *  Configures this network interface to use a static IP address.

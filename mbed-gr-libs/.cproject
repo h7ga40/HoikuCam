@@ -25,7 +25,7 @@
 			</storageModule>
 			<storageModule moduleId="com.renesas.cdt.managedbuild.core.toolchainInfo">
 				<option id="toolchain.id" value="gcc-arm-embedded"/>
-				<option id="toolchain.version" value="5.4.1.20160919"/>
+				<option id="toolchain.version" value="6.3.1.20170620"/>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.debug" cleanCommand="rm -rf *.lst *.lis *.lpp *.map" description="" errorParsers="org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.CWDLocator;org.eclipse.cdt.core.GCCErrorParser" id="com.renesas.cdt.managedbuild.gcc.rz.configuration.debug.lib.1950653600" name="Debug" parent="com.renesas.cdt.managedbuild.gcc.rz.configuration.debug.lib">
@@ -211,12 +211,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events/equeue}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/device_key/source}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/bd}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat/ChaN}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/blockdevice}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat/ChaN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/greentea-client}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib/platform}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib}&quot;"/>
@@ -232,7 +233,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls/platform/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/netsocket}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/nvstore/source}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/nvstore/source}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal/storage_abstraction}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal}&quot;"/>
@@ -327,6 +328,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/TARGET_RZA1UL/drivers/vdc5/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/TARGET_RZA1UL/drivers/vdc5/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/drivers/ceu/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/jcu/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/ospl/inc}&quot;"/>
@@ -381,12 +383,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events/equeue}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/device_key/source}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/bd}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat/ChaN}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/blockdevice}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat/ChaN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/greentea-client}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib/platform}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib}&quot;"/>
@@ -402,7 +405,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls/platform/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/netsocket}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/nvstore/source}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/nvstore/source}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal/storage_abstraction}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal}&quot;"/>
@@ -464,6 +467,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/TARGET_RZA1UL/drivers/vdc5/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/TARGET_RZA1UL/drivers/vdc5/src}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GR-PEACH_video/targets/TARGET_RZ_A1XX/drivers/ceu/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/jcu/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/GraphicsFramework/ospl/inc}&quot;"/>
@@ -518,12 +522,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events/equeue}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/events}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/device_key/source}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/bd}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat/ChaN}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/fat}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem/littlefs}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/blockdevice}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat/ChaN}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/fat}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem/littlefs}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/filesystem}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/greentea-client}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib/platform}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/frameworks/mbed-client-randlib/mbed-client-randlib}&quot;"/>
@@ -539,7 +544,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls/platform/inc}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/mbedtls}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/netsocket}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/nvstore/source}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features/storage/nvstore/source}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/features}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal/storage_abstraction}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-os/hal}&quot;"/>
@@ -699,7 +704,7 @@
 			</storageModule>
 			<storageModule moduleId="com.renesas.cdt.managedbuild.core.toolchainInfo">
 				<option id="toolchain.id" value="gcc-arm-embedded"/>
-				<option id="toolchain.version" value="5.4.1.20160919"/>
+				<option id="toolchain.version" value="6.3.1.20170620"/>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildArtefactType="org.eclipse.cdt.build.core.buildArtefactType.staticLib" buildProperties="org.eclipse.cdt.build.core.buildArtefactType=org.eclipse.cdt.build.core.buildArtefactType.staticLib,org.eclipse.cdt.build.core.buildType=org.eclipse.cdt.build.core.buildType.release" cleanCommand="rm -rf *.lst *.lis *.lpp *.map" description="" id="com.renesas.cdt.managedbuild.gcc.rz.configuration.release.lib.1471230209" name="Release" parent="com.renesas.cdt.managedbuild.gcc.rz.configuration.release.lib">

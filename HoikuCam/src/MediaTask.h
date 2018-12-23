@@ -45,7 +45,6 @@ private:
 	int _out_widx;
 	FILE *shutter_fp;
 	std::list<mail_t> mails;
-	rtos::Mutex mutex;
 	cv::Rect *_face_roi;
 private:
 	void AudioReadEnd(void *p_data, int result);

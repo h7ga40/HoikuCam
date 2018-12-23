@@ -212,7 +212,7 @@ void HTTPServerStart(NetworkInterface *net, int port = 80, osPriority priority =
                 }
                 http_server_debug_print("Forked %d\r\n", t);
             } else {
-                Thread::wait(10);
+                ThisThread::sleep_for(10);
             }
         } else {
             if(server.accept(&xclient)==0) {
@@ -225,7 +225,7 @@ void HTTPServerStart(NetworkInterface *net, int port = 80, osPriority priority =
                 }
                 http_server_debug_print("Connection full\r\n");
             } else {
-                Thread::wait(10);
+                ThisThread::sleep_for(10);
             }
         }
 

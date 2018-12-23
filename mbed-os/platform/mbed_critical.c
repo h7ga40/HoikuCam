@@ -38,7 +38,7 @@
 #else
 #error "Unknown architecture for exclusive access"
 #endif
-#else 
+#else
 #define MBED_EXCLUSIVE_ACCESS __EXCLUSIVE_ACCESS
 #endif
 #endif
@@ -57,7 +57,7 @@ bool core_util_are_interrupts_enabled(void)
 bool core_util_is_isr_active(void)
 {
 #if defined(__CORTEX_A9)
-    switch(__get_CPSR() & 0x1FU) {
+    switch (__get_CPSR() & 0x1FU) {
         case CPSR_M_USR:
         case CPSR_M_SYS:
             return false;
@@ -77,13 +77,8 @@ bool core_util_in_critical_section(void)
 
 void core_util_critical_section_enter(void)
 {
-// FIXME
-#ifdef FEATURE_UVISOR
-    #warning "core_util_critical_section_enter needs fixing to work from unprivileged code"
-#else
     // If the reentrancy counter overflows something has gone badly wrong.
     MBED_ASSERT(critical_section_reentrancy_counter < UINT32_MAX);
-#endif /* FEATURE_UVISOR */
 
     hal_critical_section_enter();
 
@@ -92,10 +87,6 @@ void core_util_critical_section_enter(void)
 
 void core_util_critical_section_exit(void)
 {
-// FIXME
-#ifdef FEATURE_UVISOR
-    #warning "core_util_critical_section_exit needs fixing to work from unprivileged code"
-#endif /* FEATURE_UVISOR */
 
     // If critical_section_enter has not previously been called, do nothing
     if (critical_section_reentrancy_counter == 0) {
@@ -112,7 +103,7 @@ void core_util_critical_section_exit(void)
 #if MBED_EXCLUSIVE_ACCESS
 
 /* Supress __ldrex and __strex deprecated warnings - "#3731-D: intrinsic is deprecated" */
-#if defined (__CC_ARM) 
+#if defined (__CC_ARM)
 #pragma diag_suppress 3731
 #endif
 
@@ -330,18 +321,21 @@ uint32_t core_util_atomic_decr_u32(volatile uint32_t *valuePtr, uint32_t delta)
 #endif
 
 
-bool core_util_atomic_cas_ptr(void * volatile *ptr, void **expectedCurrentValue, void *desiredValue) {
+bool core_util_atomic_cas_ptr(void *volatile *ptr, void **expectedCurrentValue, void *desiredValue)
+{
     return core_util_atomic_cas_u32(
-            (volatile uint32_t *)ptr,
-            (uint32_t *)expectedCurrentValue,
-            (uint32_t)desiredValue);
+               (volatile uint32_t *)ptr,
+               (uint32_t *)expectedCurrentValue,
+               (uint32_t)desiredValue);
 }
 
-void *core_util_atomic_incr_ptr(void * volatile *valuePtr, ptrdiff_t delta) {
+void *core_util_atomic_incr_ptr(void *volatile *valuePtr, ptrdiff_t delta)
+{
     return (void *)core_util_atomic_incr_u32((volatile uint32_t *)valuePtr, (uint32_t)delta);
 }
 
-void *core_util_atomic_decr_ptr(void * volatile *valuePtr, ptrdiff_t delta) {
+void *core_util_atomic_decr_ptr(void *volatile *valuePtr, ptrdiff_t delta)
+{
     return (void *)core_util_atomic_decr_u32((volatile uint32_t *)valuePtr, (uint32_t)delta);
 }
 

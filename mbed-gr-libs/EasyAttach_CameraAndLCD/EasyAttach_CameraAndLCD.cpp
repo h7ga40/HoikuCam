@@ -29,7 +29,7 @@ static const DisplayBase::lcd_config_t * lcd_port_init(DisplayBase& Display) {
     DigitalOut lcd_blon(P8_1);
     lcd_pwon = 0;
     lcd_blon = 0;
-    Thread::wait(100);
+    ThisThread::sleep_for(100);
     lcd_pwon = 1;
     lcd_blon = 1;
   #elif ((MBED_CONF_APP_LCD_TYPE & 0xFF00) == 0x0100) /* GR-PEACH RGB */
@@ -52,7 +52,7 @@ static const DisplayBase::lcd_config_t * lcd_port_init(DisplayBase& Display) {
     DigitalOut lcd_pwon(P5_12);
     lcd_pwon = 0;
     lcd_cntrst.period_us(500);
-    Thread::wait(100);
+    ThisThread::sleep_for(100);
     lcd_pwon = 1;
   #endif
     return &LcdCfgTbl_LCD_shield;
@@ -75,6 +75,7 @@ static DisplayBase::graphics_error_t camera_init(DisplayBase& Display, uint16_t 
  #else
     DisplayBase::graphics_error_t error;
     DisplayBase::video_ext_in_config_t ext_in_config;
+    DisplayBase::video_input_sel_t video_input_sel;
 
   #if defined(TARGET_RZ_A1H)
     PinName cmos_camera_pin[11] = {
@@ -88,15 +89,15 @@ static DisplayBase::graphics_error_t camera_init(DisplayBase& Display, uint16_t 
    #if MBED_CONF_APP_SHIELD_TYPE == SHIELD_AUDIO_CAMERA
     DigitalOut pwdn(P3_12);
     pwdn = 0;
-    Thread::wait(1 + 1);
+    ThisThread::sleep_for(1 + 1);
    #elif MBED_CONF_APP_SHIELD_TYPE == SHIELD_WIRELESS_CAMERA
     DigitalOut pwdn(P3_15);
     DigitalOut rstb(P3_14);
     pwdn = 0;
     rstb = 0;
-    Thread::wait(10 + 1);
+    ThisThread::sleep_for(10 + 1);
     rstb = 1;
-    Thread::wait(1 + 1);
+    ThisThread::sleep_for(1 + 1);
    #endif
   #elif defined(TARGET_GR_LYCHEE)
     PinName cmos_camera_pin[11] = {
@@ -112,13 +113,19 @@ static DisplayBase::graphics_error_t camera_init(DisplayBase& Display, uint16_t 
 
     pwdn = 0;
     rstb = 0;
-    Thread::wait(10 + 1);
+    ThisThread::sleep_for(10 + 1);
     rstb = 1;
-    Thread::wait(1 + 1);
+    ThisThread::sleep_for(1 + 1);
   #endif
 
     /* camera input port setting */
+  #if CAMERA_MODULE == MODULE_VDC
+    video_input_sel = DisplayBase::INPUT_SEL_EXT;
     error = Display.Graphics_Dvinput_Port_Init(cmos_camera_pin, 11);
+  #else
+    video_input_sel = DisplayBase::INPUT_SEL_CEU;
+    error = Display.Graphics_Ceu_Port_Init(cmos_camera_pin, 11);
+  #endif
     if( error != DisplayBase::GRAPHICS_OK ) {
         printf("Line %d, error %d\n", __LINE__, error);
         return error;
@@ -143,7 +150,7 @@ static DisplayBase::graphics_error_t camera_init(DisplayBase& Display, uint16_t 
         ext_in_config.cap_height = cap_height;                            /* Capture heigh */
     }
 
-    error = Display.Graphics_Video_init(DisplayBase::INPUT_SEL_EXT, &ext_in_config);
+    error = Display.Graphics_Video_init(video_input_sel, &ext_in_config);
     if( error != DisplayBase::GRAPHICS_OK ) {
         printf("Line %d, error %d\n", __LINE__, error);
         return error;
@@ -207,6 +214,7 @@ DisplayBase::graphics_error_t EasyAttach_CameraStart(DisplayBase& Display, Displ
         return error;
     }
 
+  #if CAMERA_MODULE == MODULE_VDC
     /* Video write process stop */
     error = Display.Video_Stop(channel);
     if (error != DisplayBase::GRAPHICS_OK) {
@@ -220,6 +228,7 @@ DisplayBase::graphics_error_t EasyAttach_CameraStart(DisplayBase& Display, Displ
         printf("Line %d, error %d\n", __LINE__, error);
         return error;
     }
+  #endif
 #endif
 
     return DisplayBase::GRAPHICS_OK;

@@ -34,8 +34,7 @@ class OnboardNetworkStack;
  *  for instantiating network sockets.
  *  @addtogroup netsocket
  */
-class NetworkStack: public DNS
-{
+class NetworkStack: public DNS {
 public:
     virtual ~NetworkStack() {};
 
@@ -61,7 +60,7 @@ public:
      *  @return         0 on success, negative error code on failure
      */
     virtual nsapi_error_t gethostbyname(const char *host,
-            SocketAddress *address, nsapi_version_t version = NSAPI_UNSPEC);
+                                        SocketAddress *address, nsapi_version_t version = NSAPI_UNSPEC);
 
     /** Hostname translation callback (asynchronous)
      *
@@ -101,7 +100,7 @@ public:
      *                  and can be passed to cancel
      */
     virtual nsapi_value_or_error_t gethostbyname_async(const char *host, hostbyname_cb_t callback,
-            nsapi_version_t version = NSAPI_UNSPEC);
+                                                       nsapi_version_t version = NSAPI_UNSPEC);
 
     /** Cancels asynchronous hostname translation
      *
@@ -162,10 +161,13 @@ public:
     virtual nsapi_error_t getstackopt(int level, int optname, void *optval, unsigned *optlen);
 
     /** Dynamic downcast to a OnboardNetworkStack */
-    virtual OnboardNetworkStack *onboardNetworkStack() { return 0; }
+    virtual OnboardNetworkStack *onboardNetworkStack()
+    {
+        return 0;
+    }
 
 protected:
-    friend class Socket;
+    friend class InternetSocket;
     friend class UDPSocket;
     friend class TCPSocket;
     friend class TCPServer;
@@ -248,7 +250,7 @@ protected:
      *  @return         0 on success, negative error code on failure
      */
     virtual nsapi_error_t socket_accept(nsapi_socket_t server,
-            nsapi_socket_t *handle, SocketAddress *address=0) = 0;
+                                        nsapi_socket_t *handle, SocketAddress *address = 0) = 0;
 
     /** Send data over a TCP socket
      *
@@ -265,7 +267,7 @@ protected:
      *                  code on failure
      */
     virtual nsapi_size_or_error_t socket_send(nsapi_socket_t handle,
-            const void *data, nsapi_size_t size) = 0;
+                                              const void *data, nsapi_size_t size) = 0;
 
     /** Receive data over a TCP socket
      *
@@ -282,7 +284,7 @@ protected:
      *                  code on failure
      */
     virtual nsapi_size_or_error_t socket_recv(nsapi_socket_t handle,
-            void *data, nsapi_size_t size) = 0;
+                                              void *data, nsapi_size_t size) = 0;
 
     /** Send a packet over a UDP socket
      *
@@ -300,7 +302,7 @@ protected:
      *                  code on failure
      */
     virtual nsapi_size_or_error_t socket_sendto(nsapi_socket_t handle, const SocketAddress &address,
-            const void *data, nsapi_size_t size) = 0;
+                                                const void *data, nsapi_size_t size) = 0;
 
     /** Receive a packet over a UDP socket
      *
@@ -318,7 +320,7 @@ protected:
      *                  code on failure
      */
     virtual nsapi_size_or_error_t socket_recvfrom(nsapi_socket_t handle, SocketAddress *address,
-            void *buffer, nsapi_size_t size) = 0;
+                                                  void *buffer, nsapi_size_t size) = 0;
 
     /** Register a callback on state change of the socket
      *
@@ -349,7 +351,7 @@ protected:
      *  @return         0 on success, negative error code on failure
      */
     virtual nsapi_error_t setsockopt(nsapi_socket_t handle, int level,
-            int optname, const void *optval, unsigned optlen);
+                                     int optname, const void *optval, unsigned optlen);
 
     /*  Get stack-specific socket options
      *
@@ -365,7 +367,7 @@ protected:
      *  @return         0 on success, negative error code on failure
      */
     virtual nsapi_error_t getsockopt(nsapi_socket_t handle, int level,
-            int optname, void *optval, unsigned *optlen);
+                                     int optname, void *optval, unsigned *optlen);
 
 private:
 

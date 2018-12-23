@@ -3,6 +3,7 @@
 #include "GlobalState.h"
 #include "DisplayBase.h"
 #include "draw_font.h"
+#include <CriticalSectionLock.h>
 
 using namespace cv;
 
@@ -167,7 +168,6 @@ AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi) :
 	_out_widx(0),
 	shutter_fp(NULL),
 	mails(),
-	mutex(),
 	_face_roi(face_roi)
 {
 }
@@ -214,9 +214,10 @@ void AudioTask::AudioReadEnd(void *p_data, int result)
 		.result = result,
 	};
 
-	mutex.lock();
-	mails.push_back(mail);
-	mutex.unlock();
+	{
+		CriticalSectionLock mutex();
+		mails.push_back(mail);
+	}
 
 	_owner->RecAudio();
 }
@@ -314,13 +315,14 @@ void AudioTask::Process()
 	mail_t mail;
 
 	if (_rec_signal) {
-		mutex.lock();
-		ret = !mails.empty();
-		if (ret) {
-			mail = mails.front();
-			mails.pop_front();
+		{
+			CriticalSectionLock mutex();
+			ret = !mails.empty();
+			if (ret) {
+				mail = mails.front();
+				mails.pop_front();
+			}
 		}
-		mutex.unlock();
 
 		if (ret) {
 			audio.read(mail.p_data, AUDIO_IN_BUF_SIZE, &audio_read_data);

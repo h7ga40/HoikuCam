@@ -5,7 +5,7 @@
  * \defgroup platform_wait_api wait_api functions
  * @{
  */
- 
+
 /* mbed Microcontroller Library
  * Copyright (c) 2006-2013 ARM Limited
  *
@@ -53,31 +53,31 @@ extern "C" {
  *  the accuracy of single precision floating point).
  *
  *  @param s number of seconds to wait
- * 
+ *
  *  @note
- *    If the RTOS is present, this function always spins to get the exact number of microseconds, 
- *    which potentially affects power (such as preventing deep sleep) and multithread performance. 
- *    You can avoid it by using Thread::wait().
+ *    If the RTOS is present, this function always spins to get the exact number of microseconds,
+ *    which potentially affects power (such as preventing deep sleep) and multithread performance.
+ *    You can avoid it by using ThisThread::sleep_for().
  */
 void wait(float s);
 
 /** Waits a number of milliseconds.
  *
  *  @param ms the whole number of milliseconds to wait
- * 
+ *
  *  @note
- *    If the RTOS is present, this function always spins to get the exact number of microseconds, 
- *    which potentially affects power (such as preventing deep sleep) and multithread performance. 
- *    You can avoid it by using Thread::wait().
+ *    If the RTOS is present, this function always spins to get the exact number of microseconds,
+ *    which potentially affects power (such as preventing deep sleep) and multithread performance.
+ *    You can avoid it by using ThisThread::sleep_for().
  */
 void wait_ms(int ms);
 
 /** Waits a number of microseconds.
  *
  *  @param us the whole number of microseconds to wait
- * 
+ *
  *  @note
- *    If the RTOS is present, this function always spins to get the exact number of microseconds, 
+ *    If the RTOS is present, this function always spins to get the exact number of microseconds,
  *    which potentially affects power (such as preventing deep sleep) and multithread performance.
  */
 void wait_us(int us);

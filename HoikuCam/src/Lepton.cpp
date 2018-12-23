@@ -178,7 +178,7 @@ void LeptonTask::OnStart()
 	_ss = 0;
 	_ss = 1;
 
-	Thread::wait(185);
+	ThisThread::sleep_for(185);
 
 	printf("beginTransmission\n");
 
