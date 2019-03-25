@@ -105,6 +105,7 @@
 
 /* libpng/png.h needs to be included */
 /* #undef HAVE_LIBPNG_PNG_H */
+#define HAVE_LIBPNG_PNG_H
 
 /* GDCM DICOM codec */
 /* #undef HAVE_GDCM */
@@ -140,6 +141,7 @@
 
 /* PNG codec */
 /* #undef HAVE_PNG */
+#define HAVE_PNG
 
 /* Posix threads (pthreads) */
 #define HAVE_PTHREADS

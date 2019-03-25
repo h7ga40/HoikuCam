@@ -3,8 +3,10 @@
 #define _NETTASK_H_
 
 #include <string>
+#include <list>
 #include "TaskBase.h"
 #include "ESP32Interface.h"
+#include "GoogleDrive.h"
 
 class NetTask;
 
@@ -41,7 +43,8 @@ public:
 		enum T {
 			Undetected,
 			Detected,
-			Update
+			Update,
+			Upload
 		};
 	};
 public:
@@ -56,10 +59,14 @@ private:
 	std::string _storage;
 	SocketAddress _storageAddr;
 	bool _update_req;
+	std::list<std::string> _uploads;
+	rtos::Mutex _mutex;
 public:
 	void Init(std::string server, std::string storage);
 	State::T GetState() { return _state; }
 	SocketAddress GetServerAddr() { return _serverAddr; }
+	void UploadRequest(std::string filename);
+	bool Upload();
 	void ProcessEvent(InterTaskSignals::T signals) override;
 	void Process() override;
 };
@@ -86,7 +93,7 @@ private:
 	std::string _password;
 	std::string _host_name;
 	State::T _state;
-	static void wifi_status(nsapi_event_t evt, intptr_t obj);
+	void wifi_status(nsapi_event_t evt, intptr_t obj);
 public:
 	State::T GetState() { return _state; }
 	void Init(std::string ssid, std::string password, std::string host_name);
@@ -104,12 +111,15 @@ public:
 	virtual ~NetTask();
 private:
 	Tasks _task;
-	ITask *_tasks[3];
+	ITask *_tasks[4];
 	GlobalState *_globalState;
 	ESP32Interface *_wifi;
 	NtpTask _ntpTask;
 	UploadTask _uploadTask;
 	WifiTask _wifiTask;
+	GoogleDriveTask _googleDriveTask;
+	FILE *upload_file;
+	size_t UploadBody(char *buf, size_t length);
 public:
 	void Init(std::string ssid, std::string password, std::string host_name,
 		std::string server, std::string storage);
@@ -122,6 +132,8 @@ public:
 	void WifiConnected();
 	bool QuerySever(const std::string hostname, SocketAddress &addr);
 	bool Update(SocketAddress server, SocketAddress storage);
+	void UploadRequest(std::string filename);
+	bool Upload(SocketAddress server, std::string filename);
 	bool WifiSleep(bool enable);
 };
 

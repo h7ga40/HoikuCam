@@ -3,7 +3,7 @@
 #include "GlobalState.h"
 #include "DisplayBase.h"
 #include "draw_font.h"
-#include <CriticalSectionLock.h>
+#include "platform/CriticalSectionLock.h"
 
 using namespace cv;
 
@@ -243,7 +243,7 @@ void AudioTask::AudioWriteEnd(void *p_data, int result)
 void AudioTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::PowerOn) != 0) {
-		audio.micVolume(0.60);
+		audio.micVolume(0.60f);
 		audio.power(true);
 		audio.frequency(SAMPLE_RATE);
 

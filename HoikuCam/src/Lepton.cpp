@@ -26,20 +26,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <mbed.h>
 #include <string>
 #include "Lepton.h"
+#include "LEPTON_SDK.h"
+#include "LEPTON_SYS.h"
+#include "LEPTON_OEM.h"
 #include "Palettes.h"
 #include "EasyAttach_CameraAndLCD.h"
-
-//#define ADDRESS  (0x2A)
-#define ADDRESS  (0x54)
-
-#define AGC (0x01)
-#define SYS (0x02)
-#define VID (0x03)
-#define OEM (0x08)
-
-#define GET (0x00)
-#define SET (0x01)
-#define RUN (0x02)
 
 #define RESULT_BUFFER_BYTE_PER_PIXEL  (2u)
 #define RESULT_BUFFER_STRIDE          (((LCD_PIXEL_WIDTH * RESULT_BUFFER_BYTE_PER_PIXEL) + 31u) & ~31u)
@@ -51,10 +42,8 @@ LeptonTask::LeptonTask(TaskThread *taskThread) :
 	_state(State::PowerOff),
 	_taskThread(taskThread),
 	_spi(P5_6, P5_7, P5_4, NC),
-	//_spi(P4_6, P4_7, P4_4, NC),
 	_wire(I2C_SDA, I2C_SCL),
 	_ss(P5_8),
-	//_ss(P4_5),
 	resets(0),
 	_minValue(65535), _maxValue(0),
 	_packets_per_frame(60)
@@ -65,110 +54,9 @@ LeptonTask::~LeptonTask()
 {
 }
 
-void LeptonTask::command(unsigned int moduleID, unsigned int commandID, unsigned int command)
-{
-	int error;
-	uint8_t write_data[4];
-
-	// Command Register is a 16-bit register located at Register Address 0x0004
-	write_data[0] = 0x00;
-	write_data[1] = 0x04;
-
-	if (moduleID == 0x08) //OEM module ID
-	{
-		write_data[2] = 0x48;
-	}
-	else {
-		write_data[2] = moduleID & 0x0f;
-	}
-	write_data[3] = ((commandID << 2) & 0xfc) | (command & 0x3);
-
-	error = _wire.write(ADDRESS, (char *)write_data, sizeof(write_data));
-	if (error != 0) {
-		printf("error=%d\n", error);
-	}
-}
-
-void LeptonTask::agc_enable()
-{
-	int error;
-	uint8_t write_data[4];
-
-	write_data[0] = 0x01;
-	write_data[1] = 0x05;
-	write_data[2] = 0x00;
-	write_data[3] = 0x01;
-
-	error = _wire.write(ADDRESS, (char *)write_data, sizeof(write_data));
-	if (error != 0) {
-		printf("error=%d\n", error);
-	}
-}
-
-void LeptonTask::set_reg(unsigned int reg)
-{
-	int error;
-	uint8_t write_data[2];
-
-	write_data[0] = reg >> 8 & 0xff;
-	write_data[1] = reg & 0xff;            // sends one uint8_t
-
-	error = _wire.write(ADDRESS, (char *)write_data, sizeof(write_data));
-	if (error != 0) {
-		printf("error=%d\n", error);
-	}
-}
-
-int LeptonTask::read_reg(unsigned int reg)
-{
-	int error;
-	int reading = 0;
-	uint8_t read_data[2] = { 0, 0 };
-	char temp[20];
-
-	set_reg(reg);
-
-	error = _wire.read(ADDRESS, (char *)read_data, sizeof(read_data));
-	if (error != 0) {
-		printf("error=%d\n", error);
-	}
-
-	reading = read_data[0];  // receive high uint8_t (overwrites previous reading)
-	//Serial.println(reading);
-	reading = reading << 8;    // shift high uint8_t to be high 8 bits
-
-	reading |= read_data[1]; // receive low uint8_t as lower 8 bits
-	for (int i = 0, b = 1 << 15; i < 16; i++, b >>= 1) {
-		temp[i] = (reading & b) ? '1' : '0';
-	}
-	temp[16] = '\0';
-	printf("reg:%d==0x%x binary:%s\n", reg, reading, temp);
-	return reading;
-}
-
-int LeptonTask::read_data(uint8_t *data, int len)
-{
-	int i;
-	int payload_length;
-
-	while (read_reg(0x2) & 0x01) {
-		printf("busy\n");
-	}
-
-	payload_length = read_reg(0x6);
-	printf("payload_length=%d\n", payload_length);
-	memset(data, 0xFF, len);
-	_wire.read(ADDRESS, (char *)data, payload_length);
-	for (i = 0; i < payload_length; i += 2) {
-		printf("%04x\n", (data[i] << 8) | data[i + 1]);
-	}
-
-	return 0;
-}
-
 void LeptonTask::OnStart()
 {
-	uint8_t data[32];
+	LEP_SYS_FLIR_SERIAL_NUMBER_T sysSerialNumberBuf;
 
 	_spi.format(8, 3/*?*/);
 	//_spi.frequency(20000000);
@@ -182,58 +70,35 @@ void LeptonTask::OnStart()
 
 	printf("beginTransmission\n");
 
-	//set_reg(0);
+	LEP_RESULT ret = LEP_OpenPort(&_wire, LEP_CCI_TWI, 400, &_port);
+	if (ret != LEP_OK) {
+		printf("  error %d\n", ret);
+		return;
+	}
 
-	//read_reg(0x0);
-
-	read_reg(0x2);
-
-	printf("SYS Camera Customer Serial Number\n");
-	command(SYS, 0x28 >> 2, GET);
-	read_data(data, sizeof(data));
-
-	printf("SYS Flir Serial Number\n");
-	command(SYS, 0x2, GET);
-	read_data(data, sizeof(data));
-
-	printf("SYS Camera Uptime\n");
-	command(SYS, 0x0C >> 2, GET);
-	read_data(data, sizeof(data));
-
-	printf("SYS Fpa Temperature Kelvin\n");
-	command(SYS, 0x14 >> 2, GET);
-	read_data(data, sizeof(data));
-
-	printf("SYS Aux Temperature Kelvin\n");
-	command(SYS, 0x10 >> 2, GET);
-	read_data(data, sizeof(data));
-
-	printf("OEM Chip Mask Revision\n");
-	command(OEM, 0x14 >> 2, GET);
-	read_data(data, sizeof(data));
-
-	//printf("OEM Part Number\n");
-	//command(OEM, 0x1C >> 2 , GET);
-	//read_data(data, sizeof(data));
-
-	printf("OEM Camera Software Revision\n");
-	command(OEM, 0x20 >> 2, GET);
-	read_data(data, sizeof(data));
+	printf("SYS FLiR Serial Number\n");
+	ret = LEP_GetSysFlirSerialNumber(&_port, &sysSerialNumberBuf);
+	if (ret != LEP_OK) {
+		printf("  error %d\n", ret);
+	}
+	else {
+		printf("  %llu\n", sysSerialNumberBuf);
+	}
 #if 0
-	printf("AGC Enable\n");
-	//command(AGC, 0x01, SET);
-	agc_enable();
-	read_data(data, sizeof(data));
+	printf("SYS Telemetry Location\n");
+	ret = LEP_SetSysTelemetryLocation(&_port, LEP_TELEMETRY_LOCATION_HEADER);
+	if (ret != LEP_OK) {
+		printf("  error %d\n", ret);
+	}
+
+	printf("SYS Telemetry Enable\n");
+	ret = LEP_SetSysTelemetryEnableState(&_port, LEP_TELEMETRY_ENABLED);
+	if (ret != LEP_OK) {
+		printf("  error %d\n", ret);
+	}
 #endif
-	printf("AGC READ\n");
-	command(AGC, 0x00, GET);
-	read_data(data, sizeof(data));
-
-	printf("SYS Telemetry Enable State");
-	command(SYS, 0x18 >> 2 ,GET);
-	read_data(data, sizeof(data));
-
-	int telemetory = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+	LEP_SYS_TELEMETRY_ENABLE_STATE_E telemetory = LEP_TELEMETRY_DISABLED;
+	LEP_GetSysTelemetryEnableState(&_port, &telemetory);
 	if (telemetory != 0) {
 		_packets_per_frame = 63;
 	}
@@ -241,9 +106,7 @@ void LeptonTask::OnStart()
 		_packets_per_frame = 60;
 	}
 
-	printf("VID Focus ROI Select\n");
-	command(/*VID*/0x03, 0x10>>2, GET);
-	read_data(data, sizeof(data));
+	printf("Packet Per Frame %d\n", _packets_per_frame);
 }
 
 void LeptonTask::ProcessEvent(InterTaskSignals::T signals)
@@ -359,8 +222,35 @@ void LeptonTask::Process()
 			for (int column = 0; column < PIXEL_PER_LINE; column++) {
 				//uint8_t index = (*values - minValue) * scale;
 				//uint8_t index = *values;
+#if 0
 				uint8_t index = (uint8_t)(*values >> 1);
 				const uint8_t *colormap = &colormap_rainbow[3 * index];
+#else
+				int colormap[3];
+				float s = (float)(*values / (511 * 3)) / ((float)(1 << 14) / (float)(511 * 3));
+				int h = *values % (511 * 3);
+				int b = (int)(256 * (1.0 - s));
+				switch (h / 511) {
+				case 0:
+					colormap[0] = b;
+					colormap[1] = (int)(s * h) + b;
+					colormap[2] = (int)(s * (511 - h)) + b;
+					break;
+				case 1:
+					colormap[0] = (int)(s * (h - 511)) + b;
+					colormap[1] = (int)(s * ((2 * 511) - h)) + b;
+					colormap[2] = b;
+					break;
+				default:
+					colormap[0] = (int)(s * ((3 * 511) - h)) + b;
+					colormap[1] = b;
+					colormap[2] = (int)(s * (h - (2 * 511))) + b;
+					break;
+				}
+				if (colormap[0] > 255) colormap[0] = 255;
+				if (colormap[1] > 255) colormap[1] = 255;
+				if (colormap[2] > 255) colormap[2] = 255;
+#endif
 				// ARGB4444
 				*pixel++ = 0xF000 | ((colormap[0] >> 4) << 8) | ((colormap[1] >> 4) << 4) | ((colormap[2] >> 4) << 0);
 				values++;
@@ -382,7 +272,175 @@ void LeptonTask::Process()
 		break;
 	default:
 		_state = State::PowerOff;
-		_timer = osWaitForever;
+		_timer = -1;
 		break;
 	}
+}
+
+extern "C" {
+
+LEP_RESULT LEP_I2C_MasterOpen(LEP_PORTID portID,
+	LEP_UINT16 *portBaudRate)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+
+	wire->frequency(*portBaudRate * 1000);
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterClose(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr)
+{
+	mbed::I2C *wire = (mbed::I2C *)portDescPtr->portID;
+	LEP_RESULT result = LEP_OK;
+
+	(void)wire;
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterReset(LEP_CAMERA_PORT_DESC_T_PTR portDescPtr)
+{
+	mbed::I2C *wire = (mbed::I2C *)portDescPtr->portID;
+	LEP_RESULT result = LEP_OK;
+
+	(void)wire;
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterReadData(LEP_PORTID portID,
+	LEP_UINT8  deviceAddress,
+	LEP_UINT16 subAddress,
+	LEP_UINT16 *dataPtr,
+	LEP_UINT16 dataLength)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+	int error;
+	LEP_UINT8 *data, *pos;
+
+	pos = data = (LEP_UINT8 *)dataPtr;
+	*pos++ = (LEP_UINT8)(subAddress >> 8);
+	*pos++ = (LEP_UINT8)subAddress;
+
+	error = wire->write(deviceAddress << 1, (char *)data, sizeof(subAddress));
+	if (error != 0)
+		return LEP_ERROR_I2C_FAIL;
+
+	error = wire->read(deviceAddress << 1, (char *)dataPtr, sizeof(LEP_UINT16) * dataLength);
+	if (error != 0)
+		return LEP_ERROR_I2C_FAIL;
+
+	for (int i = 0; i < dataLength; i++) {
+		LEP_UINT16 temp = dataPtr[i];
+		dataPtr[i] = (temp >> 8) | (temp << 8);
+	}
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterWriteData(LEP_PORTID portID,
+	LEP_UINT8  deviceAddress,
+	LEP_UINT16 subAddress,
+	LEP_UINT16 *dataPtr,
+	LEP_UINT16 dataLength)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+	int error;
+	int len = sizeof(subAddress) + sizeof(LEP_UINT16) * dataLength;
+	LEP_UINT8 *data = (LEP_UINT8 *)malloc(len);
+	LEP_UINT8 *pos;
+
+	if (data == NULL)
+		return LEP_ERROR;
+
+	pos = data;
+	*pos++ = (LEP_UINT8)(subAddress >> 8);
+	*pos++ = (LEP_UINT8)subAddress;
+
+	for (int i = 0; i < dataLength; i++) {
+		LEP_UINT16 temp = dataPtr[i];
+		*pos++ = (LEP_UINT8)(temp >> 8);
+		*pos++ = (LEP_UINT8)temp;
+	}
+
+	error = wire->write(deviceAddress << 1, (char *)data, len);
+	if (error != 0)
+		result = LEP_ERROR_I2C_FAIL;
+
+	free(data);
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterReadRegister(LEP_PORTID portID,
+	LEP_UINT8  deviceAddress,
+	LEP_UINT16 regAddress,
+	LEP_UINT16 *regValue)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+	int error;
+	LEP_UINT8 data[2], *pos;
+
+	pos = data;
+	*pos++ = (LEP_UINT8)(regAddress >> 8);
+	*pos++ = (LEP_UINT8)regAddress;
+
+	error = wire->write(deviceAddress << 1, (char *)data, sizeof(regAddress));
+	if (error != 0)
+		return LEP_ERROR_I2C_FAIL;
+
+	error = wire->read(deviceAddress << 1, (char *)data, sizeof(*regValue));
+	if (error != 0)
+		return LEP_ERROR_I2C_FAIL;
+
+	*regValue = (data[0] << 8) | data[1];
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterWriteRegister(LEP_PORTID portID,
+	LEP_UINT8  deviceAddress,
+	LEP_UINT16 regAddress,
+	LEP_UINT16 regValue)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+	int error;
+	LEP_UINT8 data[sizeof(regAddress) + sizeof(regValue)];
+	LEP_UINT8 *pos;
+
+	if (data == NULL)
+		return LEP_ERROR;
+
+	pos = data;
+	*pos++ = (LEP_UINT8)(regAddress >> 8);
+	*pos++ = (LEP_UINT8)regAddress;
+
+	*pos++ = (LEP_UINT8)(regValue >> 8);
+	*pos++ = (LEP_UINT8)regValue;
+
+	error = wire->write(deviceAddress << 1, (char *)data, sizeof(data));
+	if (error != 0)
+		result = LEP_ERROR_I2C_FAIL;
+
+	return result;
+}
+
+LEP_RESULT LEP_I2C_MasterStatus(LEP_PORTID portID,
+	LEP_UINT16 *portStatus)
+{
+	mbed::I2C *wire = (mbed::I2C *)portID;
+	LEP_RESULT result = LEP_OK;
+
+	(void)wire;
+	*portStatus = 0;
+
+	return result;
+}
+
 }

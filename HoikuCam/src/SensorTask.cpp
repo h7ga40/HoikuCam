@@ -152,7 +152,7 @@ void HeartRateTask::OnStart()
 	// BH1792
 	ret = bh1792.Init();
 	if (ret < 0) {
-		printf("error bh1792_Init %d\n", ret);
+		printf("error bh1792_Init %ld\n", ret);
 		_state = State::InitError;
 		_timer = osWaitForever;
 		return;
@@ -190,7 +190,7 @@ void HeartRateTask::ProcessEvent(InterTaskSignals::T signals)
 
 			ret = bh1792.SetParams(prm);
 			if (ret < 0) {
-				printf("error bh1792_SetParams %d\n", ret);
+				printf("error bh1792_SetParams %ld\n", ret);
 				_state = State::DeviceError;
 				_timer = osWaitForever;
 				return;
@@ -198,7 +198,7 @@ void HeartRateTask::ProcessEvent(InterTaskSignals::T signals)
 
 			ret = bh1792.StartMeasure();
 			if (ret < 0) {
-				printf("error bh1792_StartMeasure %d\n", ret);
+				printf("error bh1792_StartMeasure %ld\n", ret);
 				_state = State::DeviceError;
 				_timer = osWaitForever;
 				return;
@@ -246,7 +246,7 @@ void HeartRateTask::ProcessEvent(InterTaskSignals::T signals)
 		if (_state != State::PowerOff) {
 			ret = bh1792.StopMeasure();
 			if (ret < 0) {
-				printf("error bh1792_StopMeasure %d\n", ret);
+				printf("error bh1792_StopMeasure %ld\n", ret);
 				_state = State::DeviceError;
 				_timer = osWaitForever;
 				return;

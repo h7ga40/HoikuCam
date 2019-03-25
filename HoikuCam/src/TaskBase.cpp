@@ -157,7 +157,7 @@ void TaskThread::Main()
 
 		now = ticker_read_us(get_us_ticker_data());
 
-		timer = (now / 1000) - (prev / 1000);
+		timer = (int)((now / 1000) - (prev / 1000));
 		_task->Progress(timer);
 
 		if (evt.status == osEventSignal) {
@@ -173,5 +173,6 @@ void TaskThread::Main()
 
 void TaskThread::Signal(InterTaskSignals::T signals)
 {
-	_thread.signal_set((int)signals);
+	if (_thread.get_id() != 0)
+		_thread.signal_set((int)signals);
 }

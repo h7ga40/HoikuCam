@@ -12,10 +12,11 @@ public:
 		TriggerOn = 0x0008,
 		RecAudio = 0x0010,
 		UpdateRequest = 0x0020,
-		PowerOff = 0x0040,
-		HeartRateInt = 0x0080,
-		StartShutter = 0x0100,
-		EndShutter = 0x0200,
+		UploadRequest = 0x0040,
+		PowerOff = 0x0080,
+		HeartRateInt = 0x0100,
+		StartShutter = 0x0200,
+		EndShutter = 0x0400,
 	};
 };
 

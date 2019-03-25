@@ -18,7 +18,6 @@
 #if MBED_CONF_RTOS_PRESENT
 #include "rtos/Kernel.h"
 #include "rtos/Thread.h"
-#include "rtos/ThisThread.h"
 using namespace rtos;
 #else
 #include "Timer.h"
@@ -84,7 +83,7 @@ int poll(pollfh fhs[], unsigned nfhs, int timeout)
 #ifdef MBED_CONF_RTOS_PRESENT
         // TODO - proper blocking
         // wait for condition variable, wait queue whatever here
-        rtos::ThisThread::sleep_for(1);
+        rtos::Thread::wait(1);
 #endif
     }
     return count;

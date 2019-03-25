@@ -52,6 +52,12 @@ void GlobalState::UpdateRequest()
 	netTask->Signal(InterTaskSignals::UpdateRequest);
 }
 
+void GlobalState::UploadRequest(std::string filename)
+{
+	printf("GlobalState::UploadRequest\r\n");
+	netTask->UploadRequest(filename);
+}
+
 void GlobalState::PowerOff()
 {
 	printf("GlobalState::PowerOff\r\n");

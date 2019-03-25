@@ -22,7 +22,6 @@
 
 #if MBED_CONF_RTOS_PRESENT
 #include "rtos/Thread.h"
-#include "rtos/ThisThread.h"
 #else
 #include "platform/mbed_wait_api.h"
 #endif
@@ -333,7 +332,7 @@ void UARTSerial::wait_ms(uint32_t millisec)
      * want to just sleep until next tick.
      */
 #if MBED_CONF_RTOS_PRESENT
-    rtos::ThisThread::sleep_for(millisec);
+    rtos::Thread::wait(millisec);
 #else
     ::wait_ms(millisec);
 #endif

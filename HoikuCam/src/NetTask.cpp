@@ -71,7 +71,8 @@ UploadTask::UploadTask(NetTask *owner) :
 	_serverAddr(),
 	_storage(),
 	_storageAddr(),
-	_update_req(false)
+	_update_req(false),
+	_uploads()
 {
 }
 
@@ -87,6 +88,15 @@ void UploadTask::Init(std::string server, std::string storage)
 	_storageAddr.set_ip_address(storage.c_str());
 }
 
+void UploadTask::UploadRequest(std::string filename)
+{
+	_mutex.lock();
+	_uploads.push_back(filename);
+	_mutex.unlock();
+
+	_owner->Signal(InterTaskSignals::UploadRequest);
+}
+
 void UploadTask::ProcessEvent(InterTaskSignals::T signals)
 {
 	if ((signals & InterTaskSignals::UpdateRequest) != 0) {
@@ -100,11 +110,45 @@ void UploadTask::ProcessEvent(InterTaskSignals::T signals)
 			_timer = 0;
 		}
 	}
+	if ((signals & InterTaskSignals::UploadRequest) != 0) {
+		if (_serverAddr.get_ip_version() == NSAPI_UNSPEC) {
+			_state = State::Undetected;
+			_timer = 0;
+		}
+		else {
+			_state = State::Upload;
+			_timer = 0;
+		}
+	}
+}
+
+bool UploadTask::Upload()
+{
+	bool result;
+	std::string filename;
+
+	_mutex.lock();
+	result = !_uploads.empty();
+	if (result) {
+		filename = _uploads.front();
+		_uploads.pop_front();
+	}
+	_mutex.unlock();
+
+	if (result) {
+		result = _owner->Upload(_serverAddr, filename);
+	}
+	if (!result) {
+		_mutex.lock();
+		_uploads.push_back(filename);
+		_mutex.unlock();
+	}
+
+	return result;
 }
 
 void UploadTask::Process()
 {
-	bool ret;
 	SocketAddress addr;
 
 	if (_timer != 0)
@@ -152,8 +196,7 @@ void UploadTask::Process()
 		}
 		break;
 	case State::Update:
-		ret = _owner->Update(_serverAddr, _storageAddr);
-		if (ret) {
+		if (_owner->Update(_serverAddr, _storageAddr)) {
 			_owner->WifiSleep(true);
 			_update_req = false;
 			_retry = 0;
@@ -177,6 +220,33 @@ void UploadTask::Process()
 			}
 			else {
 				_state = State::Update;
+				_timer = 10 * 1000;
+			}
+		}
+		break;
+	case State::Upload:
+		if (Upload()) {
+			_retry = 0;
+			_state = State::Detected;
+			_timer = osWaitForever;
+		}
+		else {
+			_retry++;
+			if (_retry >= 3) {
+				if (_serverAddr.get_ip_version() == NSAPI_UNSPEC) {
+					_serverAddr.set_addr(nsapi_addr_t());
+					_retry = 0;
+					_state = State::Undetected;
+					_timer = 0;
+				}
+				else {
+					_retry = 0;
+					_state = State::Upload;
+					_timer = 3 * 60 * 1000;
+				}
+			}
+			else {
+				_state = State::Upload;
 				_timer = 10 * 1000;
 			}
 		}
@@ -212,12 +282,12 @@ void WifiTask::Init(std::string ssid, std::string password, std::string host_nam
 
 void WifiTask::wifi_status(nsapi_event_t evt, intptr_t obj)
 {
-	((WifiTask *)obj)->_owner->WifiStatus(evt);
+	_owner->WifiStatus(evt);
 }
 
 void WifiTask::OnStart()
 {
-	_wifi->attach(wifi_status);
+	_wifi->attach(callback(this, &WifiTask::wifi_status));
 
 	_state = State::Disconnected;
 	if (!_ssid.empty() && !_password.empty()) {
@@ -317,11 +387,14 @@ NetTask::NetTask(GlobalState *globalState, ESP32Interface *wifi) :
 	_wifi(wifi),
 	_ntpTask(this),
 	_uploadTask(this),
-	_wifiTask(this, wifi)
+	_wifiTask(this, wifi),
+	_googleDriveTask(this),
+	upload_file(NULL)
 {
 	_tasks[0] = &_wifiTask;
 	_tasks[1] = &_ntpTask;
 	_tasks[2] = &_uploadTask;
+	_tasks[3] = &_googleDriveTask;
 }
 
 NetTask::~NetTask()
@@ -369,6 +442,36 @@ bool NetTask::Update(SocketAddress server, SocketAddress storage)
 	auto get_req = new HttpRequest(_wifi, HTTP_GET, url.c_str());
 	auto get_res = get_req->send();
 	return (get_res != NULL) && (get_res->get_status_code() == 200);
+}
+
+void NetTask::UploadRequest(std::string filename)
+{
+	_uploadTask.UploadRequest(filename);
+}
+
+bool NetTask::Upload(SocketAddress server, std::string filename)
+{
+	if (upload_file != NULL)
+		return false;
+
+	upload_file = fopen(filename.c_str(), "rb");
+
+	auto url = std::string("http://") + std::string(server.get_ip_address())
+		+ ":3000/upload?name=" + filename;
+	auto post_req = new HttpRequest(_wifi, HTTP_POST, url.c_str());
+	auto post_res = post_req->send(mbed::callback(this, &NetTask::UploadBody));
+
+	fclose(upload_file);
+	upload_file = NULL;
+
+	if ((post_res == NULL) || (post_res->get_status_code() == 200))
+		return false;
+	return true;
+}
+
+size_t NetTask::UploadBody(char *buf, size_t length)
+{
+	return fread(buf, sizeof(char), length, upload_file);
 }
 
 void NetTask::WifiStatus(nsapi_event_t evt)

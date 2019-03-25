@@ -41,195 +41,241 @@
  */
 class HttpRequest {
 public:
-    /**
-     * HttpRequest Constructor
-     *
-     * @param[in] aNetwork The network interface
-     * @param[in] aMethod HTTP method to use
-     * @param[in] url URL to the resource
-     * @param[in] aBodyCallback Callback on which to retrieve chunks of the response body.
-                                If not set, the complete body will be allocated on the HttpResponse object,
-                                which might use lots of memory.
-    */
-    HttpRequest(NetworkInterface* aNetwork, http_method aMethod, const char* url, Callback<void(const char *at, size_t length)> aBodyCallback = 0)
-        : network(aNetwork), method(aMethod), body_callback(aBodyCallback)
-    {
-        error = 0;
-        response = NULL;
+	/**
+	 * HttpRequest Constructor
+	 *
+	 * @param[in] aNetwork The network interface
+	 * @param[in] aMethod HTTP method to use
+	 * @param[in] url URL to the resource
+	 * @param[in] aBodyCallback Callback on which to retrieve chunks of the response body.
+								If not set, the complete body will be allocated on the HttpResponse object,
+								which might use lots of memory.
+	*/
+	HttpRequest(NetworkInterface* aNetwork, http_method aMethod, const char* url, mbed::Callback<void(const char *at, size_t length)> aBodyCallback = 0)
+		: network(aNetwork), method(aMethod), body_callback(aBodyCallback)
+	{
+		error = 0;
+		response = NULL;
 
-        parsed_url = new ParsedUrl(url);
-        request_builder = new HttpRequestBuilder(method, parsed_url);
+		parsed_url = new ParsedUrl(url);
+		request_builder = new HttpRequestBuilder(method, parsed_url);
 
-        socket = new TCPSocket();
-        we_created_socket = true;
-    }
+		socket = new TCPSocket();
+		we_created_socket = true;
+	}
 
-    /**
-     * HttpRequest Constructor
-     *
-     * @param[in] aSocket An open TCPSocket
-     * @param[in] aMethod HTTP method to use
-     * @param[in] url URL to the resource
-     * @param[in] aBodyCallback Callback on which to retrieve chunks of the response body.
-                                If not set, the complete body will be allocated on the HttpResponse object,
-                                which might use lots of memory.
-    */
-    HttpRequest(TCPSocket* aSocket, http_method aMethod, const char* url, Callback<void(const char *at, size_t length)> aBodyCallback = 0)
-        : socket(aSocket), method(aMethod), body_callback(aBodyCallback)
-    {
-        error = 0;
-        response = NULL;
-        network = NULL;
+	/**
+	 * HttpRequest Constructor
+	 *
+	 * @param[in] aSocket An open TCPSocket
+	 * @param[in] aMethod HTTP method to use
+	 * @param[in] url URL to the resource
+	 * @param[in] aBodyCallback Callback on which to retrieve chunks of the response body.
+								If not set, the complete body will be allocated on the HttpResponse object,
+								which might use lots of memory.
+	*/
+	HttpRequest(TCPSocket* aSocket, http_method aMethod, const char* url, mbed::Callback<void(const char *at, size_t length)> aBodyCallback = 0)
+		: socket(aSocket), method(aMethod), body_callback(aBodyCallback)
+	{
+		error = 0;
+		response = NULL;
+		network = NULL;
 
-        parsed_url = new ParsedUrl(url);
-        request_builder = new HttpRequestBuilder(method, parsed_url);
+		parsed_url = new ParsedUrl(url);
+		request_builder = new HttpRequestBuilder(method, parsed_url);
 
-        we_created_socket = false;
-    }
+		we_created_socket = false;
+	}
 
-    /**
-     * HttpRequest Constructor
-     */
-    ~HttpRequest() {
-        // should response be owned by us? Or should user free it?
-        // maybe implement copy constructor on response...
-        if (response) {
-            delete response;
-        }
+	/**
+	 * HttpRequest Constructor
+	 */
+	~HttpRequest()
+	{
+// should response be owned by us? Or should user free it?
+// maybe implement copy constructor on response...
+		if (response) {
+			delete response;
+		}
 
-        if (parsed_url) {
-            delete parsed_url;
-        }
+		if (parsed_url) {
+			delete parsed_url;
+		}
 
-        if (request_builder) {
-            delete request_builder;
-        }
+		if (request_builder) {
+			delete request_builder;
+		}
 
-        if (socket && we_created_socket) {
-            delete socket;
-        }
-    }
+		if (socket && we_created_socket) {
+			delete socket;
+		}
+	}
 
-    /**
-     * Execute the request and receive the response.
-     */
-    HttpResponse* send(const void* body = NULL, nsapi_size_t body_size = 0) {
-        if (response != NULL) {
-            // already executed this response
-            error = -2100; // @todo, make a lookup table with errors
-            return NULL;
-        }
+	/**
+	 * Execute the request and receive the response.
+	 */
+	HttpResponse* send(mbed::Callback<size_t(char *at, size_t length)> body = NULL, nsapi_size_t body_size = 0)
+	{
+		if (response != NULL) {
+			// already executed this response
+			error = -2100; // @todo, make a lookup table with errors
+			return NULL;
+		}
 
-        error = 0;
+		error = 0;
 
-        if (we_created_socket) {
-            nsapi_error_t open_result = socket->open(network);
-            if (open_result != 0) {
-                error = open_result;
-                return NULL;
-            }
+		if (we_created_socket) {
+			nsapi_error_t open_result = socket->open(network);
+			if (open_result != 0) {
+				error = open_result;
+				return NULL;
+			}
 
-            nsapi_error_t connection_result = socket->connect(parsed_url->host(), parsed_url->port());
-            if (connection_result != 0) {
-                error = connection_result;
-                return NULL;
-            }
-        }
+			nsapi_error_t connection_result = socket->connect(parsed_url->host(), parsed_url->port());
+			if (connection_result != 0) {
+				error = connection_result;
+				return NULL;
+			}
+		}
 
-        size_t request_size = 0;
-        char* request = request_builder->build(body, body_size, request_size);
+		size_t request_size = 0;
+		char* request = request_builder->build(body_size, request_size);
 
-        nsapi_size_or_error_t send_result = socket->send(request, request_size);
+		nsapi_size_or_error_t send_result = socket->send(request, request_size);
 
-        free(request);
+		free(request);
 
-        if (send_result != request_size) {
-            error = send_result;
-            return NULL;
-        }
+		if (send_result != request_size) {
+			error = send_result;
+			return NULL;
+		}
 
-        // Create a response object
-        response = new HttpResponse();
-        // And a response parser
-        HttpParser parser(response, HTTP_RESPONSE, body_callback);
+		if (body_size > 0) {
+			size_t rest = body_size;
+			size_t len = rest;
+			if (len > 1024)
+				len = 1024;
+			char *buf = (char *)malloc(len);
+			for (;;) {
+				size_t ret = body.call(buf, len);
+				send_result = socket->send(buf, ret);
+				if (send_result != request_size) {
+					free(buf);
+					error = send_result;
+					return NULL;
+				}
+				rest -= ret;
+				if (rest > 0)
+					break;
+				len = rest;
+				if (len > 1024)
+					len = 1024;
+			}
+			free(buf);
+			socket->send("\r\n", 2);
+		}
+		else if (body_size < 0) {
+			size_t len = 1024;
+			char *buf = (char *)malloc(len);
+			for (;;) {
+				size_t ret = body.call(buf, len);
+				if (ret <= 0)
+					break;
+				send_result = socket->send(buf, ret);
+				if (send_result != request_size) {
+					free(buf);
+					error = send_result;
+					return NULL;
+				}
+			}
+			free(buf);
+			socket->send("\r\n", 2);
+		}
 
-        // Set up a receive buffer (on the heap)
-        uint8_t* recv_buffer = (uint8_t*)malloc(HTTP_RECEIVE_BUFFER_SIZE);
+		// Create a response object
+		response = new HttpResponse();
+		// And a response parser
+		HttpParser parser(response, HTTP_RESPONSE, body_callback);
 
-        // TCPSocket::recv is called until we don't have any data anymore
-        nsapi_size_or_error_t recv_ret;
-        while ((recv_ret = socket->recv(recv_buffer, HTTP_RECEIVE_BUFFER_SIZE)) > 0) {
+		// Set up a receive buffer (on the heap)
+		uint8_t* recv_buffer = (uint8_t*)malloc(HTTP_RECEIVE_BUFFER_SIZE);
 
-            // Pass the chunk into the http_parser
-            size_t nparsed = parser.execute((const char*)recv_buffer, recv_ret);
-            if (nparsed != recv_ret) {
-                // printf("Parsing failed... parsed %d bytes, received %d bytes\n", nparsed, recv_ret);
-                error = -2101;
-                free(recv_buffer);
-                return NULL;
-            }
+		// TCPSocket::recv is called until we don't have any data anymore
+		nsapi_size_or_error_t recv_ret;
+		while ((recv_ret = socket->recv(recv_buffer, HTTP_RECEIVE_BUFFER_SIZE)) > 0) {
 
-            if (response->is_message_complete()) {
-                break;
-            }
-        }
-        // error?
-        if (recv_ret < 0) {
-            error = recv_ret;
-            free(recv_buffer);
-            return NULL;
-        }
+			// Pass the chunk into the http_parser
+			size_t nparsed = parser.execute((const char*)recv_buffer, recv_ret);
+			if (nparsed != recv_ret) {
+				// printf("Parsing failed... parsed %d bytes, received %d bytes\n", nparsed, recv_ret);
+				error = -2101;
+				free(recv_buffer);
+				return NULL;
+			}
 
-        // When done, call parser.finish()
-        parser.finish();
+			if (response->is_message_complete()) {
+				break;
+			}
+		}
+		// error?
+		if (recv_ret < 0) {
+			error = recv_ret;
+			free(recv_buffer);
+			return NULL;
+		}
 
-        // Free the receive buffer
-        free(recv_buffer);
+		// When done, call parser.finish()
+		parser.finish();
 
-        if (we_created_socket) {
-            // Close the socket
-            socket->close();
-        }
+		// Free the receive buffer
+		free(recv_buffer);
 
-        return response;
-    }
+		if (we_created_socket) {
+			// Close the socket
+			socket->close();
+		}
 
-    /**
-     * Set a header for the request.
-     *
-     * The 'Host' and 'Content-Length' headers are set automatically.
-     * Setting the same header twice will overwrite the previous entry.
-     *
-     * @param[in] key Header key
-     * @param[in] value Header value
-     */
-    void set_header(string key, string value) {
-        request_builder->set_header(key, value);
-    }
+		return response;
+	}
 
-    /**
-     * Get the error code.
-     *
-     * When send() fails, this error is set.
-     */
-    nsapi_error_t get_error() {
-        return error;
-    }
+	/**
+	 * Set a header for the request.
+	 *
+	 * The 'Host' and 'Content-Length' headers are set automatically.
+	 * Setting the same header twice will overwrite the previous entry.
+	 *
+	 * @param[in] key Header key
+	 * @param[in] value Header value
+	 */
+	void set_header(string key, string value)
+	{
+		request_builder->set_header(key, value);
+	}
+
+	/**
+	 * Get the error code.
+	 *
+	 * When send() fails, this error is set.
+	 */
+	nsapi_error_t get_error()
+	{
+		return error;
+	}
 
 private:
-    NetworkInterface* network;
-    TCPSocket* socket;
-    http_method method;
-    Callback<void(const char *at, size_t length)> body_callback;
+	NetworkInterface* network;
+	TCPSocket* socket;
+	http_method method;
+	mbed::Callback<void(const char *at, size_t length)> body_callback;
 
-    ParsedUrl* parsed_url;
+	ParsedUrl* parsed_url;
 
-    HttpRequestBuilder* request_builder;
-    HttpResponse* response;
+	HttpRequestBuilder* request_builder;
+	HttpResponse* response;
 
-    bool we_created_socket;
+	bool we_created_socket;
 
-    nsapi_error_t error;
+	nsapi_error_t error;
 };
 
 #endif // _HTTP_REQUEST_

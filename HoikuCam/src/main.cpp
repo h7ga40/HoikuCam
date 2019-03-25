@@ -1,5 +1,4 @@
-// GR-LYCHEE OpenCV Face Detection Example
-// Public Domain
+// HoikuCam
 
 #include "mbed.h"
 #include "SdUsbConnect.h"
@@ -29,26 +28,6 @@ static SensorTask sensorTask(&globalState);
 static ESP32Interface wifi(P5_3, P3_14, P7_1, P0_1);
 static NetTask netTask(&globalState, &wifi);
 static LeptonTaskThread leptonTask(&globalState);
-
-extern "C" void _kill()
-{
-	mbed_die();
-}
-
-extern "C" int _getpid()
-{
-	return 1;
-}
-
-extern "C" int gettimeofday(struct timeval *__restrict __p, void *__restrict __tz)
-{
-    us_timestamp_t time;
-    if (!__p) return 0;
-    time = ticker_read_us(get_us_ticker_data());
-    __p->tv_sec = time / 1000000;
-    __p->tv_usec = time - (__p->tv_sec * 1000000);
-    return 0;
-}
 
 enum parse_state_t {
 	psRoot,
@@ -85,8 +64,7 @@ start(void *data, const XML_Char *el, const XML_Char **attr)
 {
 	config_data_t *cd = (config_data_t *)data;
 
-	switch (cd->state)
-	{
+	switch (cd->state) {
 	case psRoot:
 		if (strcmp(el, "wifi") == 0) {
 			cd->state = psWifi;
@@ -135,8 +113,7 @@ end(void *data, const XML_Char *el)
 	config_data_t *cd = (config_data_t *)data;
 	(void)el;
 
-	switch (cd->state)
-	{
+	switch (cd->state) {
 	case psRoot:
 		break;
 	case psWifi:
@@ -185,8 +162,7 @@ text(void *data, const XML_Char *s, int len)
 	config_data_t *cd = (config_data_t *)data;
 	int l, maxlen;
 
-	switch (cd->state)
-	{
+	switch (cd->state) {
 	case psRoot:
 	case psWifi:
 		break;
@@ -275,13 +251,13 @@ bool ReadIniFile(std::string filename)
 
 	size_t len;
 	FILE *fp = fopen(filename.c_str(), "rb");
-	if (fp != NULL){
+	if (fp != NULL) {
 		for (;;) {
 			len = fread(temp, 1, sizeof(temp), fp);
 			if (len <= 0)
 				break;
 
-			if((config.state != psError) && (XML_Parse(parser, (char *)temp, len, 0) == 0)) {
+			if ((config.state != psError) && (XML_Parse(parser, (char *)temp, len, 0) == 0)) {
 				XML_Error error_code = XML_GetErrorCode(parser);
 				printf("Parsing response buffer of size %lid failed"
 					" with error code %d (%s).\n",
@@ -295,7 +271,7 @@ bool ReadIniFile(std::string filename)
 
 	XML_ParserFree(parser);
 
-    return true;
+	return true;
 }
 
 int main(void)
@@ -353,6 +329,6 @@ int main(void)
 		led3 = netTask.IsActive();
 		led4 = mediaTask.IsRecording();
 
-		osDelay((diff / 1000) % 100);
+		ThisThread::sleep_for((diff / 1000) % 100);
 	}
 }

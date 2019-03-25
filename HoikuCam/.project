@@ -3,11 +3,14 @@
 	<name>HoikuCam</name>
 	<comment></comment>
 	<projects>
+		<project>curl</project>
 		<project>expat</project>
+		<project>FLIR_Lepton</project>
 		<project>mbed-gr-libs</project>
 		<project>mbed-os</project>
 		<project>opencv-lib</project>
 		<project>utilities</project>
+		<project>zlib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
