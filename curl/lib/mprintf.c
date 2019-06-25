@@ -996,7 +996,7 @@ static int dprintf_formatf(
 	va_list arp)
 {
 	unsigned int r, i, j, w, f;
-	unsigned long v;
+	unsigned long long v;
 	char s[16], c, d, *p;
 
 	/* Number of characters written.  */
@@ -1021,7 +1021,13 @@ static int dprintf_formatf(
 		for (w = 0; c >= '0' && c <= '9'; c = *fmt++)	/* Minimum width */
 			w = w * 10 + c - '0';
 		if (c == 'l' || c == 'L') {	/* Prefix: Size is long int */
-			f |= 4; c = *fmt++;
+			c = *fmt++;
+			if (c == 'l' || c == 'L') {	/* Prefix: Size is long int */
+				f |= 32; c = *fmt++;
+			}
+			else {
+				f |= 4;
+			}
 		}
 		else if (c == 'h') {	/* Prefix: Size is short int */
 			f |= 16; c = *fmt++;
@@ -1054,10 +1060,15 @@ static int dprintf_formatf(
 		}
 
 		/* Get an argument and put it in numeral */
-		v = (f & 4) ? va_arg(arp, long)
-			: ((f & 16) ? ((d == 'D') ? (long)((short)va_arg(arp, int)) : (long)((unsigned short)va_arg(arp, unsigned int)))
-				: ((d == 'D') ? (long)va_arg(arp, int) : (long)va_arg(arp, unsigned int)));
-		if (d == 'D' && (v & 0x80000000)) {
+		if (f & 4)
+			v = (long long)va_arg(arp, long);
+		else if (f & 16)
+			v = (d == 'D') ? (long long)((short)va_arg(arp, int)) : (long long)((unsigned short)va_arg(arp, unsigned int));
+		else if (f & 32)
+			v = (d == 'D') ? (long long)(va_arg(arp, long long)) : (long long)(va_arg(arp, unsigned long long));
+		else
+			v = (d == 'D') ? (long long)va_arg(arp, int) : (long long)va_arg(arp, unsigned int);
+		if (d == 'D' && (v & 0x8000000000000000ll)) {
 			v = 0 - v;
 			f |= 8;
 		}

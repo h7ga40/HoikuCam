@@ -13,8 +13,6 @@
 #define FACE_DETECTOR_MODEL     "/storage/lbpcascade_frontalface.xml"
 
 /* Application variables */
-Mat frame_gray;     // Input frame (in grayscale)
-
 DigitalOut led1(LED1);
 DigitalOut led2(LED2);
 DigitalOut led3(LED3);
@@ -38,6 +36,14 @@ enum parse_state_t {
 	psUpload,
 	psUploadServer,
 	psUploadStorage,
+	psLepton,
+	psLeptonRadiometry,
+	psLeptonFFCNorm,
+	psLeptonTelemetry,
+	psLeptonOffset,
+	psLeptonSlope,
+	psLeptonReference,
+	psLeptonColor,
 	psError
 };
 
@@ -55,8 +61,10 @@ struct upload_config_t {
 struct config_data_t {
 	parse_state_t state;
 	int pos;
+	char temp[16];
 	wifi_config_t wifi;
 	upload_config_t upload;
+	lepton_config_t lepton;
 };
 
 static void XMLCALL
@@ -71,6 +79,9 @@ start(void *data, const XML_Char *el, const XML_Char **attr)
 		}
 		else if (strcmp(el, "upload") == 0) {
 			cd->state = psUpload;
+		}
+		else if (strcmp(el, "lepton") == 0) {
+			cd->state = psLepton;
 		}
 		break;
 	case psWifi:
@@ -100,6 +111,40 @@ start(void *data, const XML_Char *el, const XML_Char **attr)
 			cd->upload.storage[0] = '\0';
 			cd->pos = 0;
 			cd->state = psUploadStorage;
+		}
+		break;
+	case psLepton:
+		if (strcmp(el, "radiometry") == 0) {
+			cd->lepton.radiometry = 0;
+			cd->state = psLeptonRadiometry;
+		}
+		else if (strcmp(el, "ffcnorm") == 0) {
+			cd->lepton.ffcnorm = 0;
+			cd->state = psLeptonFFCNorm;
+		}
+		else if (strcmp(el, "telemetry") == 0) {
+			cd->lepton.telemetry = 0;
+			cd->state = psLeptonTelemetry;
+		}
+		else if (strcmp(el, "offset") == 0) {
+			cd->temp[0] = '\0';
+			cd->pos = 0;
+			cd->state = psLeptonOffset;
+		}
+		else if (strcmp(el, "slope") == 0) {
+			cd->temp[0] = '\0';
+			cd->pos = 0;
+			cd->state = psLeptonSlope;
+		}
+		else if (strcmp(el, "reference") == 0) {
+			cd->temp[0] = '\0';
+			cd->pos = 0;
+			cd->state = psLeptonReference;
+		}
+		else if (strcmp(el, "color") == 0) {
+			cd->temp[0] = '\0';
+			cd->pos = 0;
+			cd->state = psLeptonColor;
 		}
 		break;
 	default:
@@ -149,6 +194,45 @@ end(void *data, const XML_Char *el)
 	case psUploadStorage:
 		if (strcmp(el, "storage") == 0) {
 			cd->state = psUpload;
+		}
+		break;
+	case psLeptonRadiometry:
+		if (strcmp(el, "radiometry") == 0) {
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonFFCNorm:
+		if (strcmp(el, "ffcnorm") == 0) {
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonTelemetry:
+		if (strcmp(el, "telemetry") == 0) {
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonOffset:
+		if (strcmp(el, "offset") == 0) {
+			cd->lepton.offset = atoi(cd->temp);
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonSlope:
+		if (strcmp(el, "slope") == 0) {
+			cd->lepton.slope = atoi(cd->temp);
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonReference:
+		if (strcmp(el, "reference") == 0) {
+			cd->lepton.reference = atoi(cd->temp);
+			cd->state = psLepton;
+		}
+		break;
+	case psLeptonColor:
+		if (strcmp(el, "color") == 0) {
+			cd->lepton.color = atoi(cd->temp);
+			cd->state = psLepton;
 		}
 		break;
 	default:
@@ -226,6 +310,33 @@ text(void *data, const XML_Char *s, int len)
 			cd->upload.storage[cd->pos] = '\0';
 		}
 		break;
+	case psLeptonRadiometry:
+		if ((*s != '0') || (len != 1))
+			cd->lepton.radiometry = 1;
+		break;
+	case psLeptonFFCNorm:
+		if ((*s != '0') || (len != 1))
+			cd->lepton.ffcnorm = 1;
+		break;
+	case psLeptonTelemetry:
+		if ((*s != '0') || (len != 1))
+			cd->lepton.telemetry = 1;
+		break;
+	case psLeptonOffset:
+	case psLeptonSlope:
+	case psLeptonReference:
+	case psLeptonColor:
+		maxlen = sizeof(cd->temp) - 1;
+		l = cd->pos + len;
+		if (l > maxlen)
+			len = maxlen - cd->pos;
+
+		if (len > 0) {
+			memcpy(cd->temp + cd->pos, s, len);
+			cd->pos += len;
+			cd->temp[cd->pos] = '\0';
+		}
+		break;
 	default:
 		break;
 	}
@@ -274,8 +385,55 @@ bool ReadIniFile(std::string filename)
 	return true;
 }
 
-int main(void)
+LeptonTask *lepton;
+
+extern "C" int usrcmd_lpt(int argc, char **argv)
 {
+	if (argc < 2) {
+		printf("lpt [s] \n");
+		return 0;
+	}
+
+	if (strcmp(argv[1], "s") == 0) {
+		globalState.MakeFilePath();
+		auto file = globalState.GetFilePath() + ".bmp";
+		lepton->SaveImage(file.c_str());
+	}
+	else if ((strcmp(argv[1], "r") == 0) && (argc > 2)) {
+		lepton->ReqRadiometry(strcmp(argv[2], "0") == 0);
+	}
+	else if (strcmp(argv[1], "r0") == 0) {
+		lepton->ReqRadiometry(false);
+	}
+	else if (strcmp(argv[1], "r1") == 0) {
+		lepton->ReqRadiometry(true);
+	}
+	else if (strcmp(argv[1], "n") == 0) {
+		lepton->ReqFFCNormalization();
+	}
+	else if ((strcmp(argv[1], "t") == 0) && (argc > 2)) {
+		lepton->ReqTelemetry(strcmp(argv[2], "0") == 0);
+	}
+	else if (strcmp(argv[1], "t0") == 0) {
+		lepton->ReqTelemetry(false);
+	}
+	else if (strcmp(argv[1], "t1") == 0) {
+		lepton->ReqTelemetry(true);
+	}
+	else if (strcmp(argv[1], "p") == 0) {
+		lepton->ReqGetSpotmeterObj();
+	}
+	else if ((strcmp(argv[1], "b") == 0) && (argc > 5)) {
+		lepton->ReqSetSpotmeterRoi(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5]));
+	}
+
+	return 0;
+}
+
+int main()
+{
+	char textbuf[80];
+
 	globalState.storage = &sdUsbConnect;
 	globalState.wifi = &wifi;
 	globalState.netTask = &netTask;
@@ -291,6 +449,8 @@ int main(void)
 	netTask.Init(config.wifi.ssid, config.wifi.password, config.wifi.host_name,
 		config.upload.server, config.upload.storage);
 	faceDetectTask.Init(FACE_DETECTOR_MODEL);
+	lepton = leptonTask.GetLeptonTask();
+	lepton->SetConfig(&config.lepton);
 
 	netTask.Start();
 	sensorTask.Start();
@@ -301,7 +461,7 @@ int main(void)
 	us_timestamp_t now, org = ticker_read_us(get_us_ticker_data());
 	while (true) {
 		now = ticker_read_us(get_us_ticker_data());
-		int diff = now - org;
+		us_timestamp_t diff = now - org;
 		if (diff > 1000000) {
 			org += (diff / 1000000) * 1000000;
 			led1 = !led1;
@@ -323,6 +483,38 @@ int main(void)
 
 			temp = std::string(ctime(&tm));
 			lcd_drawString(temp.c_str(), 330, 0, 0xFCCC, 0x0000);
+#if 0
+			uint16_t *data = lepton->GetTelemetryA();
+			snprintf(textbuf, sizeof(textbuf), "TmA:%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
+			lcd_drawString(textbuf, 72, 148, 0xFCCC, 0x0000);
+
+			data = lepton->GetTelemetryB();
+			snprintf(textbuf, sizeof(textbuf), "TmB:%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
+			lcd_drawString(textbuf, 72, 160, 0xFCCC, 0x0000);
+
+			data = lepton->GetTelemetryC();
+			snprintf(textbuf, sizeof(textbuf), "TmC:%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X%04X", data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15]);
+			lcd_drawString(textbuf, 72, 172, 0xFCCC, 0x0000);
+#endif
+			int fpatemp = lepton->GetFpaTemperature() - 27315;
+			snprintf(textbuf, sizeof(textbuf), "FPA:%4d.%02uŽ", fpatemp / 100, (fpatemp > 0) ? (fpatemp % 100) : -(fpatemp % 100));
+			lcd_drawString(textbuf, 400, 160, 0xFCCC, 0x0000);
+
+			int auxtemp = lepton->GetAuxTemperature() - 27315;
+			snprintf(textbuf, sizeof(textbuf), "AUX:%4d.%02uŽ", auxtemp / 100, (auxtemp > 0) ? (auxtemp % 100) : -(auxtemp % 100));
+			lcd_drawString(textbuf, 400, 172, 0xFCCC, 0x0000);
+
+			int reference = fpatemp;
+			if (config.lepton.reference != 0)
+				reference = auxtemp;
+
+			int minValue = (int)((config.lepton.slope / 1000.0) * (lepton->GetMinValue() - 8192)) + config.lepton.offset + reference;
+			snprintf(textbuf, sizeof(textbuf), "min:%4d.%02uŽ", minValue / 100, (minValue > 0) ? (minValue % 100) : -(minValue % 100));
+			lcd_drawString(textbuf, 400, 184, 0xFCCC, 0x0000);
+
+			int maxValue = (int)((config.lepton.slope / 1000.0) * (lepton->GetMaxValue() - 8192)) + config.lepton.offset + reference;
+			snprintf(textbuf, sizeof(textbuf), "max:%4d.%02uŽ", maxValue / 100, (maxValue > 0) ? (maxValue % 100) : -(maxValue % 100));
+			lcd_drawString(textbuf, 400, 196, 0xFCCC, 0x0000);
 		}
 
 		led2 = netTask.IsConnected();
@@ -331,4 +523,6 @@ int main(void)
 
 		ThisThread::sleep_for((diff / 1000) % 100);
 	}
+
+	return 0;
 }

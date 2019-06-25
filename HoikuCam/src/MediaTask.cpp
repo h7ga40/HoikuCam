@@ -4,6 +4,7 @@
 #include "DisplayBase.h"
 #include "draw_font.h"
 #include "platform/CriticalSectionLock.h"
+#include "JPEG_Converter.h"
 
 using namespace cv;
 
@@ -12,7 +13,8 @@ using namespace cv;
 
 static uint8_t audio_frame_buffer[AUDIO_FRAME_BUFFER_STRIDE * AUDIO_FRAME_BUFFER_HEIGHT]__attribute((section("NC_BSS"),aligned(32)));
 
-extern DisplayBase Display;
+DisplayBase Display;
+JPEG_Converter Jcu;
 
 void Audio_Start_LCD_Display(void) {
     DisplayBase::rect_t rect;
@@ -541,7 +543,7 @@ void MediaTask::UpdateRequest()
 }
 
 FaceDetectTask::FaceDetectTask(GlobalState *globalState) :
-	TaskThread(this, osPriorityBelowNormal, (1024 * 33)),
+	TaskThread(this, osPriorityBelowNormal, (1024 * 33), NULL, "FaceDetectTask"),
 	_globalState(globalState),
 	_state(State::PowerOff),
 	_timer(0)

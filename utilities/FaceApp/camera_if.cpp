@@ -38,8 +38,8 @@ static uint8_t FrameBuffer_Video[FRAME_BUFFER_STRIDE * FRAME_BUFFER_HEIGHT]__att
 static uint8_t JpegBuffer[1024 * 63]__attribute((aligned(32)));
 
 /* jpeg convert */
-static JPEG_Converter Jcu;
-DisplayBase Display;
+extern JPEG_Converter Jcu;
+extern DisplayBase Display;
 
 #if MBED_CONF_APP_LCD
 #define RESULT_BUFFER_BYTE_PER_PIXEL  (2u)

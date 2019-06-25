@@ -146,6 +146,8 @@ private:
 	GlobalState *_globalState;
 	LeptonTask leptonTask;
 public:
+	void SetConfig(lepton_config_t *config) { leptonTask.SetConfig(config); }
+	LeptonTask *GetLeptonTask() { return &leptonTask; }
 };
 
 #endif // _SENSORTASK_H_
