@@ -8,9 +8,11 @@
 		<project>FLIR_Lepton</project>
 		<project>mbed-gr-libs</project>
 		<project>mbed-os</project>
+		<project>musl</project>
 		<project>opencv-lib</project>
 		<project>utilities</project>
 		<project>zlib</project>
+		<project>zxing</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

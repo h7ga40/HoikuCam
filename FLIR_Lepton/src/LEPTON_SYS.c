@@ -181,6 +181,7 @@ LEP_RESULT LEP_GetSysCustSerialNumber( LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
                               ( LEP_COMMAND_ID )LEP_CID_SYS_CUST_SERIAL_NUMBER,
                               ( LEP_ATTRIBUTE_T_PTR )sysCustSNPtr,
                               attributeWordLength );
+   return(result);
 }
 #endif
 LEP_RESULT LEP_GetSysCameraUpTime( LEP_CAMERA_PORT_DESC_T_PTR portDescPtr,
@@ -331,6 +332,7 @@ LEP_RESULT LEP_SetSysTelemetryEnableState( LEP_CAMERA_PORT_DESC_T_PTR portDescPt
                               ( LEP_COMMAND_ID )LEP_CID_SYS_TELEMETRY_ENABLE_STATE,
                               ( LEP_ATTRIBUTE_T_PTR ) & enableState,
                               attributeWordLength );
+
    return( result );
 }
 

@@ -5,6 +5,8 @@
 #include "LEPTON_SYS.h"
 #include "LEPTON_OEM.h"
 #include "LEPTON_RAD.h"
+#include "LEPTON_AGC.h"
+#include "LEPTON_VID.h"
 #include "Palettes.h"
 #include "EasyAttach_CameraAndLCD.h"
 #include "crc16.h"
@@ -60,7 +62,9 @@ LeptonTask::LeptonTask(TaskThread *taskThread) :
 	_telemetryReq(0),
 	_spotmeterReq(0),
 	_spotmeterRoi(),
-	_reqSpotmeterRoi()
+	_reqSpotmeterRoi(),
+	_agcReq(0),
+	_config()
 {
 	memcpy(_image, BMPHeader, BITMAP_HEADER_SIZE);
 	memset(&_image[BITMAP_HEADER_SIZE / 2], 0xFF, sizeof(_image) - BITMAP_HEADER_SIZE);
@@ -267,6 +271,8 @@ void LeptonTask::OnStart()
 
 	LowPower();
 
+	EnableAgc(_config->agc);
+
 	EnableRadiometry(_config->radiometry);
 
 	if (_config->ffcnorm) {
@@ -274,6 +280,281 @@ void LeptonTask::OnStart()
 	}
 
 	EnableTelemetry(_config->telemetry);
+
+	ThisThread::sleep_for(1000);
+
+	LEP_VID_VIDEO_OUTPUT_FORMAT_E vidVideoOutputFormat;
+	ret = LEP_GetVidVideoOutputFormat(&_port, &vidVideoOutputFormat);
+	if (ret == LEP_OK) {
+		switch (vidVideoOutputFormat) {
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8:
+			printf("Video output format:RAW8\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW10:
+			printf("Video output format:RAW10\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW12:
+			printf("Video output format:RAW12\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RGB888:
+			printf("Video output format:RGB888\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RGB666:
+			printf("Video output format:RGB666\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RGB565:
+			printf("Video output format:RGB565\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_YUV422_8BIT:
+			printf("Video output format:YUV422_8BIT\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW14:
+			printf("Video output format:RAW14\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_YUV422_10BIT:
+			printf("Video output format:YUV422_10BIT\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_USER_DEFINED:
+			printf("Video output format:USER_DEFINED\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8_2:
+			printf("Video output format:RAW8_2\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8_3:
+			printf("Video output format:RAW8_3\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8_4:
+			printf("Video output format:RAW8_4\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8_5:
+			printf("Video output format:RAW8_5\n");
+			break;
+		case LEP_VID_VIDEO_OUTPUT_FORMAT_RAW8_6:
+			printf("Video output format:RAW8_6\n");
+			break;
+		default:
+			printf("Video output format:%d\n", vidVideoOutputFormat);
+			break;
+		}
+	}
+	vidVideoOutputFormat = LEP_VID_VIDEO_OUTPUT_FORMAT_RAW14;
+	ret = LEP_SetVidVideoOutputFormat(&_port, vidVideoOutputFormat);
+	if (ret != LEP_OK) {
+		printf("Set video output format error %s %d\n", GetLeptonErrorString(ret), ret);
+	}
+
+	LEP_RBFO_T radRBFO;
+	ret = LEP_GetRadRBFOInternal0(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("Internal0\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+		// -- SYS FLiR Serial Number 2384545
+		//    FLiR OEM software version GPP:1.0.032 DSP:1.0.032
+		// R:358836
+		// B:1435.000
+		// F:1.000
+		// O:156.000
+		// -- Software Interface Description Document
+		//    4.8.14 RAD Low Gain RBFO External Parameters Default Setting
+		// R:64155
+		// B:1428.000
+		// F:1.000
+		// O:728.000
+		// -- Advanced Radiometry Application Note
+		//    5.4 Manual calibration
+		// R:428523
+		// B:1483.385
+		// F:1.000
+		// O:1211.504
+	}
+	//radRBFO.RBFO_R = 358836;
+	//radRBFO.RBFO_B = 1435000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 156000;
+	//ret = LEP_SetRadRBFOInternal0(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	ret = LEP_GetRadRBFOExternal0(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("External0\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+	}
+	//radRBFO.RBFO_R = 358836;
+	//radRBFO.RBFO_B = 1435000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 426395;
+	//ret = LEP_SetRadRBFOExternal0(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	ret = LEP_GetRadInternalRBFOLowGain(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("Internal low gain\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+	}
+	//radRBFO.RBFO_R = 64155;
+	//radRBFO.RBFO_B = 1470000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 728000;
+	//ret = LEP_SetRadInternalRBFOLowGain(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	ret = LEP_GetRadExternalRBFOLowGain(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("External low gain\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+	}
+	//radRBFO.RBFO_R = 104897;
+	//radRBFO.RBFO_B = 1470000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 327398;
+	//ret = LEP_SetRadExternalRBFOLowGain(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	ret = LEP_GetRadInternalRBFOHighGain(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("Internal high gain\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+	}
+	//radRBFO.RBFO_R = 395653;
+	//radRBFO.RBFO_B = 1435000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 156000;
+	//ret = LEP_SetRadInternalRBFOHighGain(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	ret = LEP_GetRadExternalRBFOHighGain(&_port, &radRBFO);
+	if (ret == LEP_OK) {
+		printf("External high gain\n");
+		// S:signal = W(T) = R / (exp(B / TK) - F) + O
+		printf("	R:%d\n", radRBFO.RBFO_R);
+		printf("	B:%f\n", radRBFO.RBFO_B / 1000.0);
+		printf("	F:%f\n", radRBFO.RBFO_F / 1000.0);
+		printf("	O:%f\n", radRBFO.RBFO_O / 1000.0);
+	}
+	//radRBFO.RBFO_R = 358836;
+	//radRBFO.RBFO_B = 1435000;
+	//radRBFO.RBFO_F = 1000;
+	//radRBFO.RBFO_O = 426395;
+	//ret = LEP_SetRadExternalRBFOHighGain(&_port, &radRBFO);
+	//if (ret != LEP_OK) {
+	//	printf("Set RBFO error %s %d\n", GetLeptonErrorString(ret), ret);
+	//}
+
+	LEP_RAD_FLUX_LINEAR_PARAMS_T fluxParams;
+	ret = LEP_GetRadFluxLinearParams(&_port, &fluxParams);
+	if (ret == LEP_OK) {
+		printf("sceneEmissivity:%f\n", fluxParams.sceneEmissivity / 81.92);
+		printf("TBkgK:%f.02℃\n", (fluxParams.TBkgK - 27315) / 100.0);
+		printf("tauWindow:%f\n", fluxParams.tauWindow / 81.92);
+		printf("TWindowK:%f.02℃\n", (fluxParams.TWindowK - 27315) / 100.0);
+		printf("tauAtm:%f\n", fluxParams.tauAtm / 81.92);
+		printf("TAtmK:%f.02℃\n", (fluxParams.TAtmK - 27315) / 100.0);
+		printf("reflWindow:%f\n", fluxParams.reflWindow / 81.92);
+		printf("TReflK:%f.02℃\n", (fluxParams.TReflK - 27315) / 100.0);
+	}
+
+	LEP_RAD_TLINEAR_RESOLUTION_E resolution;
+	ret = LEP_GetRadTLinearResolution(&_port, &resolution);
+	if (ret == LEP_OK) {
+		switch (resolution) {
+		case LEP_RAD_RESOLUTION_0_1:
+			printf("Scale factor:0.1\n");
+			break;
+		case LEP_RAD_RESOLUTION_0_01:
+			printf("Scale factor:0.01\n");
+			break;
+		default:
+			printf("Scale factor:?(%d)\n", resolution);
+			break;
+		}
+	}
+
+	LEP_RAD_ENABLE_E enableState;
+	ret = LEP_GetRadTLinearAutoResolution(&_port, &enableState);
+	if (ret == LEP_OK) {
+		switch (enableState) {
+		case LEP_RAD_DISABLE:
+			printf("TLinear auto resolution: disable\n");
+			break;
+		case LEP_RAD_ENABLE:
+			printf("TLinear auto resolution: enable\n");
+			break;
+		default:
+			printf("TLinear auto resolution: %d\n", enableState);
+			break;
+		}
+	}
+	enableState = LEP_RAD_DISABLE;
+	ret = LEP_SetRadTLinearAutoResolution(&_port, enableState);
+	if (ret != LEP_OK) {
+		printf("Set TLinear auto resolution error %s %d\n", GetLeptonErrorString(ret), ret);
+	}
+
+	LEP_SYS_GAIN_MODE_E gainMode;
+	ret = LEP_GetSysGainMode(&_port, &gainMode);
+	if (ret == LEP_OK) {
+		switch (gainMode) {
+		case LEP_SYS_GAIN_MODE_HIGH:
+			printf("Gain mode: High\n");
+			break;
+		case LEP_SYS_GAIN_MODE_LOW:
+			printf("Gain mode: Low\n");
+			break;
+		case LEP_SYS_GAIN_MODE_AUTO:
+			printf("Gain mode: Auto\n");
+			break;
+		default:
+			printf("Gain mode: %d\n", gainMode);
+			break;
+		}
+	}
+	gainMode = LEP_SYS_GAIN_MODE_LOW;
+	ret = LEP_SetSysGainMode(&_port, gainMode);
+	if (ret != LEP_OK) {
+		printf("Set gain mode error %s %d\n", GetLeptonErrorString(ret), ret);
+	}
+}
+
+void LeptonTask::EnableAgc(bool enable)
+{
+	printf("AGC %s set", enable ? "enable" : "disable");
+	LEP_RESULT ret = LEP_SetAgcEnableState(&_port, enable ? LEP_AGC_ENABLE : LEP_AGC_DISABLE);
+	if (ret == LEP_OK) {
+		printf(" OK\n");
+	}
+	else {
+		printf(" %s %d\n", GetLeptonErrorString(ret), ret);
+	}
 }
 
 void LeptonTask::EnableRadiometry(bool enable)
@@ -389,6 +670,24 @@ void LeptonTask::GetSpotmeterObj()
 	}
 	else {
 		printf(" %s %d\n", GetLeptonErrorString(ret), ret);
+	}
+}
+
+bool LeptonTask::GetSpotmeterObj(uint16_t *minValue, uint16_t *maxValue)
+{
+	LEP_RESULT ret;
+	LEP_RAD_SPOTMETER_OBJ_KELVIN_T spotmeterObj;
+
+	ret = LEP_GetRadSpotmeterObjInKelvinX100(&_port, &spotmeterObj);
+	if (ret == LEP_OK) {
+		if (minValue != NULL)
+			*minValue = spotmeterObj.radSpotmeterMinValue;
+		if (maxValue != NULL)
+			*maxValue = spotmeterObj.radSpotmeterMaxValue;
+		return true;
+	}
+	else {
+		return false;
 	}
 }
 
@@ -526,15 +825,15 @@ void LeptonTask::Process()
 					value = (value >> 8) | (value << 8);
 					//frameBuffer[i] = value;
 
-					if ((_spotmeterRoi.startRow <= row) && (_spotmeterRoi.endRow >= row)
-						&& (_spotmeterRoi.startCol <= col) && (_spotmeterRoi.endCol >= col)) {
+					//if ((_spotmeterRoi.startRow <= row) && (_spotmeterRoi.endRow >= row)
+					//	&& (_spotmeterRoi.startCol <= col) && (_spotmeterRoi.endCol >= col)) {
 						if (value > maxValue) {
 							maxValue = value;
 						}
 						if (value < minValue) {
 							minValue = value;
 						}
-					}
+					//}
 					col++;
 					*pixel++ = value;
 				}
@@ -563,8 +862,9 @@ void LeptonTask::Process()
 			return;
 		}
 
-		_maxValue = maxValue;
-		_minValue = minValue;
+		//_maxValue = maxValue;
+		//_minValue = minValue;
+		GetSpotmeterObj(&_minValue, &_maxValue);
 
 		_resets++;
 		_state = State::UpdateParam;
@@ -573,6 +873,16 @@ void LeptonTask::Process()
 	case State::UpdateParam:
 		LEP_GetSysFpaTemperatureKelvin(&_port, &_fpaTemperature);
 		LEP_GetSysAuxTemperatureKelvin(&_port, &_auxTemperature);
+		switch (_agcReq) {
+		case 1:
+			_agcReq = 0;
+			EnableAgc(false);
+			break;
+		case 2:
+			_agcReq = 0;
+			EnableAgc(true);
+			break;
+		}
 		switch (_radiometryReq) {
 		case 1:
 			_radiometryReq = 0;
@@ -616,7 +926,11 @@ void LeptonTask::Process()
 		diff = maxValue - minValue;
 		if (diff < 256) {
 			diff = 256;
-			minValue = (maxValue + minValue) / 2 - 128;
+			minValue = (maxValue + minValue) / 2;
+			if (minValue < 128)
+				minValue = 0;
+			else
+				minValue -= 128;
 		}
 		scale = 255.9f / diff;
 

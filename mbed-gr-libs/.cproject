@@ -444,7 +444,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/video/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/videostab/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/DisplayApp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs\DisplayApp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback/decoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/HttpServer_snapshot_mbed-os}&quot;"/>
@@ -583,7 +583,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/video/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/videostab/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/DisplayApp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs\DisplayApp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback/decoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/HttpServer_snapshot_mbed-os}&quot;"/>
@@ -697,7 +697,6 @@
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
-					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.CWDLocator" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GCCErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 				</extensions>
