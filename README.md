@@ -1,2 +1,2 @@
-# HoikuCam
-Camera gadget for Hoiku
+# LycheeCam
+Camera gadget for Lifehacker

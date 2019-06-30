@@ -12,7 +12,7 @@ all:
 	$(MAKE) -j -C utilities all
 	$(MAKE) -j -C zlib all
 	$(MAKE) -j -C zxing all
-	$(MAKE) -j -C HoikuCam all
+	$(MAKE) -j -C LycheeCam all
 
 .PHONY: clean
 clean:
@@ -25,4 +25,4 @@ clean:
 	$(MAKE) -C utilities clean
 	$(MAKE) -C zlib clean
 	$(MAKE) -C zxing clean
-	$(MAKE) -C HoikuCam clean
+	$(MAKE) -C LycheeCam clean
