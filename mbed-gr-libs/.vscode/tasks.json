@@ -8,7 +8,7 @@
         "owner": "cpp",
         "fileLocation": [
             "relative",
-            "${workspaceRoot}/mbed-gr-libs/Debug"
+            "${workspaceRoot}/mbed-gr-libs"
         ],
         "pattern": {
             "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",

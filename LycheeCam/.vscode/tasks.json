@@ -8,7 +8,7 @@
         "owner": "cpp",
         "fileLocation": [
             "relative",
-            "${workspaceRoot}/LycheeCam/Debug"
+            "${workspaceRoot}/LycheeCam"
         ],
         "pattern": {
             "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",

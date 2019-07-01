@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+*.bin
+*.elf
+*.hex
+
+# 
+LycheeCam/Debug/LycheeCam.link_script.ld
+LycheeCam/Debug/.link_options.txt

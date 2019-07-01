@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "GR-PEACH",
+            "name": "GR-LYCHEE",
             "includePath": [
                 "${workspaceFolder}/../musl/include",
                 "${workspaceFolder}/../mbed-os/cmsis/TARGET_CORTEX_A",

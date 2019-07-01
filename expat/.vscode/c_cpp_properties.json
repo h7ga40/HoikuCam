@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "GR-PEACH",
+            "name": "GR-LYCHEE",
             "includePath": [
                 "${workspaceFolder}/../expat/src",
                 "${workspaceFolder}/../expat"

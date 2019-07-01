@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "GR-PEACH",
+            "name": "GR-LYCHEE",
             "includePath": [
                 "${workspaceFolder}/../mbed-gr-libs",
                 "${workspaceFolder}/../mbed-gr-libs/EasyAttach_CameraAndLCD",
