@@ -99,6 +99,41 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "write app",
+            "linux": {
+                "command": "rsync",
+                "args": [
+                    "-av",
+                    "--progress",
+                    "${workspaceRoot}/Debug/LycheeCam.bin",
+                    "/media/${env:USER}/MBED/"
+                ]
+            },
+            "osx": {
+                "command": "rsync",
+                "args": [
+                    "-av",
+                    "--progress",
+                    "${workspaceRoot}/Debug/LycheeCam.bin",
+                    "/Volumes/MBED/"
+                ]
+            },
+            "windows": {
+                "command": "C:\\Windows\\System32\\robocopy.exe",
+                "args": [
+                    "${workspaceRoot}\\Debug",
+                    "j:\\",
+                    "LycheeCam.bin"
+                ],
+                "options": {
+                    "shell": {
+                        "executable": "C:\\Windows\\System32\\cmd.exe",
+                        "args":["/D", "/C"]
+                    }
+                }
+            }
         }
     ]
 }

@@ -263,13 +263,13 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/video/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/opencv-lib/videostab/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs\DisplayApp}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/EasyPlayback/decoder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs/DisplayApp}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs/EasyPlayback}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs/EasyPlayback/decoder}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/FaceApp}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/HttpServer_snapshot_mbed-os}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/HttpServer_snapshot_mbed-os/Handler}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/RomRamBlockDevice}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/mbed-gr-libs/bd/RomRamBlockDevice}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/mbed-http}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/mbed-http/http_parser}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/utilities/mbed-rpc}&quot;"/>

@@ -187,12 +187,12 @@ INCLUDE_PATHS += -I../../opencv-lib/video/include
 INCLUDE_PATHS += -I../../opencv-lib/videostab/include
 INCLUDE_PATHS += -I../../utilities
 INCLUDE_PATHS += -I../../mbed-gr-libs/DisplayApp
-INCLUDE_PATHS += -I../../utilities/EasyPlayback
-INCLUDE_PATHS += -I../../utilities/EasyPlayback/decoder
+INCLUDE_PATHS += -I../../mbed-gr-libs/EasyPlayback
+INCLUDE_PATHS += -I../../mbed-gr-libs/EasyPlayback/decoder
 INCLUDE_PATHS += -I../../utilities/FaceApp
 INCLUDE_PATHS += -I../../utilities/HttpServer_snapshot_mbed-os
 INCLUDE_PATHS += -I../../utilities/HttpServer_snapshot_mbed-os/Handler
-INCLUDE_PATHS += -I../../utilities/RomRamBlockDevice
+INCLUDE_PATHS += -I../../mbed-gr-libs/bd/RomRamBlockDevice
 INCLUDE_PATHS += -I../../utilities/mbed-http
 INCLUDE_PATHS += -I../../utilities/mbed-http/http_parser
 INCLUDE_PATHS += -I../../utilities/mbed-rpc
@@ -250,7 +250,7 @@ C_FLAGS += -Wno-unused-parameter
 C_FLAGS += -Wno-missing-field-initializers
 C_FLAGS += -Wnull-dereference
 C_FLAGS += -g3
-C_FLAGS += -Wstack-usage=100
+C_FLAGS += -Wstack-usage=256
 
 C_FLAGS += --include ../../mbed-os/mbed_config.h
 C_FLAGS += -DARM_MATH_CA9
@@ -318,7 +318,7 @@ CXX_FLAGS += -Wno-unused-parameter
 CXX_FLAGS += -Wno-missing-field-initializers
 CXX_FLAGS += -Wnull-dereference
 CXX_FLAGS += -g3
-CXX_FLAGS += -Wstack-usage=100
+CXX_FLAGS += -Wstack-usage=256
 
 CXX_FLAGS += --include ../../mbed-os/mbed_config.h
 CXX_FLAGS += -DARM_MATH_CA9
@@ -387,7 +387,7 @@ ASM_FLAGS += -Wno-unused-parameter
 ASM_FLAGS += -Wno-missing-field-initializers
 ASM_FLAGS += -Wnull-dereference
 ASM_FLAGS += -g3
-ASM_FLAGS += -Wstack-usage=100
+ASM_FLAGS += -Wstack-usage=256
 
 
 LD_FLAGS :=-Wl,--gc-sections -Wl,--wrap,main -mcpu=cortex-a9 -mthumb-interwork -marm -march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -mno-unaligned-access -DMBED_BOOT_STACK_SIZE=4096 

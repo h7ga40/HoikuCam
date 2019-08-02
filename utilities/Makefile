@@ -222,7 +222,7 @@ C_FLAGS += -Wno-unused-parameter
 C_FLAGS += -Wno-missing-field-initializers
 C_FLAGS += -Wnull-dereference
 C_FLAGS += -g3
-C_FLAGS += -Wstack-usage=100
+C_FLAGS += -Wstack-usage=256
 
 C_FLAGS += --include ../../mbed-os/mbed_config.h
 C_FLAGS += -DARM_MATH_CA9
@@ -290,7 +290,7 @@ CXX_FLAGS += -Wno-unused-parameter
 CXX_FLAGS += -Wno-missing-field-initializers
 CXX_FLAGS += -Wnull-dereference
 CXX_FLAGS += -g3
-CXX_FLAGS += -Wstack-usage=100
+CXX_FLAGS += -Wstack-usage=256
 
 CXX_FLAGS += --include ../../mbed-os/mbed_config.h
 CXX_FLAGS += -DARM_MATH_CA9
@@ -359,7 +359,7 @@ ASM_FLAGS += -Wno-unused-parameter
 ASM_FLAGS += -Wno-missing-field-initializers
 ASM_FLAGS += -Wnull-dereference
 ASM_FLAGS += -g3
-ASM_FLAGS += -Wstack-usage=100
+ASM_FLAGS += -Wstack-usage=256
 
 
 # Tools and Flags
