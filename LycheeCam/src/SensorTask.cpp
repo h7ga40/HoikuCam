@@ -8,7 +8,11 @@ extern uint8_t heart_mark;
 TriggerButtonTask::TriggerButtonTask(SensorTask *owner) :
 	Task(10),
 	_owner(owner),
+#ifndef MICRO_BIT_ADDON
 	button(D6),
+#else
+	button(D9),
+#endif
 	_state((button != 0) ? State::Down : State::Up),
 	_count(0)
 {
@@ -25,7 +29,11 @@ void TriggerButtonTask::Process()
 
 	_timer = 10;
 
+#ifndef MICRO_BIT_ADDON
 	State::T now = (button != 0) ? State::Down : State::Up;
+#else
+	State::T now = (button == 0) ? State::Down : State::Up;
+#endif
 	if (now != _state) {
 		_count++;
 		if (_count > 10) {
@@ -49,7 +57,12 @@ void TriggerButtonTask::Process()
 GripButtonTask::GripButtonTask(SensorTask *owner) :
 	Task(10),
 	_owner(owner),
+#ifndef MICRO_BIT_ADDON
 	button(A0),
+#else
+	button(D7),
+	_toggle(0),
+#endif
 	_state(State::Release),
 	_count(0),
 	_threshold(0.8f)
@@ -67,13 +80,31 @@ void GripButtonTask::Process()
 
 	_timer = 10;
 
+#ifndef MICRO_BIT_ADDON
 	State::T now = (button < _threshold) ? State::Hold : State::Release;
+#else
+	State::T now = _state;
+	int btn = button;
+	if (btn == 0) {
+		if (_toggle == 0) {
+			if (_state == State::Release)
+				now = State::Hold;
+			else
+				now = State::Release;
+		}
+	}
+	else {
+		_toggle = 0;
+	}
+#endif
 	if (now != _state) {
 		_count++;
 		if (_count > 10) {
 			_state = now;
 			_count = 0;
-
+#ifdef MICRO_BIT_ADDON
+			_toggle = 1;
+#endif
 			if (now == State::Hold)
 				printf("Grip::Hold\r\n");
 			else

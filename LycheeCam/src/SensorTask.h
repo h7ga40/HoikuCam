@@ -32,6 +32,8 @@ public:
 	void Process() override;
 };
 
+#define MICRO_BIT_ADDON
+
 class GripButtonTask : public Task
 {
 public:
@@ -48,7 +50,12 @@ public:
 	virtual ~GripButtonTask();
 private:
 	SensorTask *_owner;
+#ifndef MICRO_BIT_ADDON
 	mbed::AnalogIn button;
+#else
+	mbed::DigitalIn button;
+	int _toggle;
+#endif
 	State::T _state;
 	int _count;
 	float _threshold;
