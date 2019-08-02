@@ -125,7 +125,9 @@
                 "args": [
                     "${workspaceRoot}\\Debug",
                     "j:\\",
-                    "LycheeCam.bin"
+                    "LycheeCam.bin",
+                    "/R:1",
+                    "/W:10",
                 ],
                 "options": {
                     "shell": {
