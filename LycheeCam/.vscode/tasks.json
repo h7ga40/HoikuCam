@@ -8,7 +8,7 @@
         "owner": "cpp",
         "fileLocation": [
             "relative",
-            "${workspaceRoot}/Debug"
+            "${workspaceFolder}/Debug"
         ],
         "pattern": {
             "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error|fatal error):\\s+(.*)$",
@@ -56,10 +56,7 @@
             "windows": {
                 "command": "make.exe"
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "label": "build LycheeCam",
@@ -76,10 +73,7 @@
             "windows": {
                 "command": "make.exe"
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "label": "clean LycheeCam",
@@ -95,10 +89,7 @@
             "windows": {
                 "command": "make.exe"
             },
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "group": "build"
         },
         {
             "label": "write app",
@@ -107,7 +98,7 @@
                 "args": [
                     "-av",
                     "--progress",
-                    "${workspaceRoot}/Debug/LycheeCam.bin",
+                    "${workspaceFolder}/Debug/LycheeCam.bin",
                     "/media/${env:USER}/MBED/"
                 ]
             },
@@ -116,14 +107,14 @@
                 "args": [
                     "-av",
                     "--progress",
-                    "${workspaceRoot}/Debug/LycheeCam.bin",
+                    "${workspaceFolder}/Debug/LycheeCam.bin",
                     "/Volumes/MBED/"
                 ]
             },
             "windows": {
                 "command": "C:\\Windows\\System32\\robocopy.exe",
                 "args": [
-                    "${workspaceRoot}\\Debug",
+                    "${workspaceFolder}\\Debug",
                     "j:\\",
                     "LycheeCam.bin",
                     "/R:1",
