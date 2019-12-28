@@ -15,7 +15,7 @@ static uint8_t audio_frame_buffer[AUDIO_FRAME_BUFFER_STRIDE * AUDIO_FRAME_BUFFER
 
 DisplayBase Display;
 JPEG_Converter Jcu;
-extern LCD_Handler_t lcd;
+LCD_Handler_t audio_frame = { LCD_PIXEL_WIDTH, LCD_PIXEL_HEIGHT, audio_frame_buffer };
 
 void Audio_Start_LCD_Display(void) {
     DisplayBase::rect_t rect;
@@ -39,35 +39,6 @@ void Audio_Start_LCD_Display(void) {
 
 void clear_screen(void) {
 	memset(audio_frame_buffer, 0, sizeof(audio_frame_buffer));
-}
-
-void draw_square(int x, int y, int w, int h, uint32_t colour) {
-	uint16_t * p_bottom_left_pos = (uint16_t *)&audio_frame_buffer[0];
-	int idx_base;
-	int wk_idx;
-	int i;
-
-	idx_base = (x + (LCD_PIXEL_WIDTH * y));
-
-	/* top */
-	wk_idx = idx_base;
-	for (i = 0; i < w; i++) {
-		p_bottom_left_pos[wk_idx++] = colour;
-	}
-
-	/* middle */
-	for (i = 1; i < (h - 1); i++) {
-		wk_idx = idx_base + (LCD_PIXEL_WIDTH * i);
-		p_bottom_left_pos[wk_idx] = colour;
-		wk_idx += (w - 1);
-		p_bottom_left_pos[wk_idx] = colour;
-	}
-
-	/* bottom */
-	wk_idx = idx_base + (LCD_PIXEL_WIDTH * (h - 1));
-	for (i = 0; i < w; i++) {
-		p_bottom_left_pos[wk_idx++] = colour;
-	}
 }
 
 static void disp_audio_wave(int16_t * p_data, int32_t size, uint32_t color) {
@@ -177,7 +148,6 @@ AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi) :
 
 AudioTask::~AudioTask()
 {
-
 }
 
 void AudioTask::OnStart()
@@ -208,9 +178,9 @@ void AudioTask::AudioReadEnd(void *p_data, int result)
 	clear_screen();
 	disp_audio_wave((int16_t *)p_data, result / 2, color);
 	if (_face_roi->width > 0 && _face_roi->height > 0) {
-		draw_square(_face_roi->x, _face_roi->y, _face_roi->width, _face_roi->height, 0xF0F0);
+		lcd_drawRect_(&audio_frame, _face_roi->x, _face_roi->y, _face_roi->width, _face_roi->height, 0xF0F0);
 	}
-	lcd_drawString(&lcd, "●", 0, 0, 0xF000 | (0xF00 & (((uint16_t)heart_mark) << 8)), 0x0000);
+	lcd_drawString(&audio_frame, "●", 0, 0, 0xF000 | (0xF00 & (((uint16_t)heart_mark) << 8)), 0x0000);
 
 	mail_t mail = {
 		.p_data = p_data,

@@ -84,6 +84,16 @@ void get_bitmap_font(const uint8_t *string, uint8_t *bitmap_data, uint32_t *use_
 	}
 }
 
+void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint32_t color)
+{
+	uint16_t *p_bottom_left_pos = (uint16_t *)& hlcd->_buffer[0];
+
+	x = hlcd->_width - 1 - x;
+	y = hlcd->_height - 1 - y;
+	p_bottom_left_pos[x + y * hlcd->_width] = ((color & 0xF0000000) >> 16)
+		| ((color & 0x00F00000) >> 12) | ((color & 0x0000F000) >> 8) | ((color & 0x000000F0) >> 4);
+}
+
 void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint16_t color)
 {
 	uint16_t *p_bottom_left_pos = (uint16_t *)& hlcd->_buffer[0];

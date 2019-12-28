@@ -20,6 +20,7 @@ typedef struct LCD_Handler_t {
 extern uint16_t lcd_init_height;
 extern uint16_t lcd_init_width;
 
+void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint32_t color);
 void lcd_drawPixel(LCD_Handler_t *lcd, int16_t x, int16_t y, uint16_t color);
 void lcd_drawFastVLine(LCD_Handler_t *lcd, int16_t x, int16_t y,
 	int16_t h, uint16_t color);
