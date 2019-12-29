@@ -13,6 +13,7 @@
 #include "ZXingTask.h"
 #include "EasyAttach_CameraAndLCD.h"
 #include "qrcode.h"
+#include "KKSphere.h"
 
 #define FACE_DETECTOR_MODEL     "/storage/lbpcascade_frontalface.xml"
 
@@ -20,6 +21,8 @@ extern uint8_t user_frame_buffer_result[];
 LCD_Handler_t lcd = { LCD_PIXEL_WIDTH, LCD_PIXEL_HEIGHT, user_frame_buffer_result };
 uint16_t lcd_init_width = LCD_PIXEL_WIDTH;
 uint16_t lcd_init_height = LCD_PIXEL_HEIGHT;
+
+extern LCD_Handler_t audio_frame;
 
 /* Application variables */
 DigitalOut led1(LED1);
@@ -30,9 +33,10 @@ DigitalOut led4(LED4);
 static GlobalState globalState;
 static SdUsbConnect sdUsbConnect("storage");
 //static FaceDetectTask faceDetectTask(&globalState);
-//static MediaTask mediaTask(&globalState, &faceDetectTask.face_roi);
+static CKKSphere kkSphereTask(&globalState, &audio_frame);
+//static MediaTask mediaTask(&globalState, &faceDetectTask.face_roi, &kkSphereTask);
 cv::Rect face_roi;
-static MediaTask mediaTask(&globalState, &face_roi);
+static MediaTask mediaTask(&globalState, &face_roi, &kkSphereTask);
 static SensorTask sensorTask(&globalState);
 static ESP32Interface wifi(P5_3, P3_14, P7_1, P0_1);
 static NetTask netTask(&globalState, &wifi);
@@ -476,6 +480,7 @@ int main(void)
 	//faceDetectTask.Start();
 	leptonTask.Start();
 	zxingTask.Start();
+	//kkSphereTask.Start();
 
 	us_timestamp_t now, org = ticker_read_us(get_us_ticker_data());
 	while (true) {

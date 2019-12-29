@@ -52,6 +52,7 @@ OBJECTS += src/draw_font.o
 OBJECTS += src/GlobalState.o
 OBJECTS += src/GoogleDrive.o
 OBJECTS += src/jsonsl.o
+OBJECTS += src/KKSphere.o
 OBJECTS += src/Lepton.o
 OBJECTS += src/main.o
 OBJECTS += src/MediaTask.o
@@ -390,7 +391,7 @@ ASM_FLAGS += -g3
 ASM_FLAGS += -Wstack-usage=256
 
 
-LD_FLAGS :=-Wl,--gc-sections -Wl,--wrap,main -mcpu=cortex-a9 -mthumb-interwork -marm -march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -mno-unaligned-access -DMBED_BOOT_STACK_SIZE=4096 
+LD_FLAGS :=-Wl,--gc-sections -Wl,--wrap,main -mcpu=cortex-a9 -mthumb-interwork -marm -march=armv7-a -mfpu=vfpv3 -mfloat-abi=hard -mno-unaligned-access -DMBED_BOOT_STACK_SIZE=4096 -Wl,-Map=$(PROJECT).map,--cref
 LD_SYS_LIBS :=-Wl,--start-group -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys -lcurl -lexpat -lFLIR_Lepton -lmbed-gr-libs -lmbed-os -lopencv-lib -lutilities -lzlib -lzxing -Wl,--end-group
 
 # Tools and Flags

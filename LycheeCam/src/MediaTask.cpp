@@ -128,7 +128,7 @@ static const unsigned char wav_header_tbl[] = {
 	0x00,0x00,0x00,0x00
 };
 
-AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi) :
+AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi, CKKSphere *kksphere) :
 	Task(osWaitForever),
 	_owner(owner),
 	audio(0x80, AUDIO_OUT_BUF_NUM - 1, AUDIO_IN_BUF_NUM),
@@ -142,7 +142,8 @@ AudioTask::AudioTask(MediaTask *owner, cv::Rect *face_roi) :
 	_out_widx(0),
 	shutter_fp(NULL),
 	mails(),
-	_face_roi(face_roi)
+	_face_roi(face_roi),
+	_kksphere(kksphere)
 {
 }
 
@@ -167,6 +168,16 @@ void AudioTask::OnStart()
 
 void AudioTask::AudioReadEnd(void *p_data, int result)
 {
+#if 0
+	if (result > 0 && _kksphere->IsReady()) {
+		_timedLevel.bufferSize = result;
+		_timedLevel.frequency[0] = (uint16_t *)p_data;
+		_timedLevel.frequency[1] = (uint16_t *)p_data;
+		_timedLevel.waveform[0] = (int16_t *)p_data;
+		_timedLevel.waveform[1] = (int16_t *)p_data;
+		_kksphere->Update(_timedLevel);
+	}
+#else
 	uint32_t color;
 
 	if (_state == State::Recording) {
@@ -177,6 +188,7 @@ void AudioTask::AudioReadEnd(void *p_data, int result)
 	}
 	clear_screen();
 	disp_audio_wave((int16_t *)p_data, result / 2, color);
+#endif
 	if (_face_roi->width > 0 && _face_roi->height > 0) {
 		lcd_drawRect_(&audio_frame, _face_roi->x, _face_roi->y, _face_roi->width, _face_roi->height, 0xF0F0);
 	}
@@ -465,11 +477,11 @@ void VibratorTask::Process()
 	_timer = osWaitForever;
 }
 
-MediaTask::MediaTask(GlobalState *globalState, cv::Rect *face_roi) :
+MediaTask::MediaTask(GlobalState *globalState, cv::Rect *face_roi, CKKSphere *kksphere) :
 	TaskThread(&_task),
 	_task(_tasks, sizeof(_tasks) / sizeof(_tasks[0])),
 	_globalState(globalState),
-	audioTask(this, face_roi),
+	audioTask(this, face_roi, kksphere),
 	visualTask(this),
 	vibratorTask(this)
 {

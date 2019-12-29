@@ -9,6 +9,7 @@
 #include "camera_if.hpp"
 #include "face_detector.hpp"
 #include "AUDIO_GRBoard.h"
+#include "KKSphere.h"
 
 struct mail_t {
 	void *p_data;
@@ -30,7 +31,7 @@ public:
 		};
 	};
 public:
-	AudioTask(MediaTask *owner, cv::Rect *face_roi);
+	AudioTask(MediaTask *owner, cv::Rect *face_roi, CKKSphere *kksphere);
 	virtual ~AudioTask();
 private:
 	MediaTask *_owner;
@@ -46,6 +47,8 @@ private:
 	FILE *shutter_fp;
 	std::list<mail_t> mails;
 	cv::Rect *_face_roi;
+	TTimedLevel _timedLevel;
+	CKKSphere *_kksphere;
 private:
 	void AudioReadEnd(void *p_data, int result);
 	static void callback_audio_read_end(void *p_data, int32_t result, void *p_app_data) {
@@ -117,7 +120,7 @@ class GlobalState;
 class MediaTask : public TaskThread
 {
 public:
-	MediaTask(GlobalState *globalState, cv::Rect *face_roi);
+	MediaTask(GlobalState *globalState, cv::Rect *face_roi, CKKSphere *kksphere);
 	virtual ~MediaTask();
 private:
 	Tasks _task;
