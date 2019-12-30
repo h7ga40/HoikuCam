@@ -168,27 +168,28 @@ void AudioTask::OnStart()
 
 void AudioTask::AudioReadEnd(void *p_data, int result)
 {
-#if 0
-	if (result > 0 && _kksphere->IsReady()) {
-		_timedLevel.bufferSize = result;
-		_timedLevel.frequency[0] = (uint16_t *)p_data;
-		_timedLevel.frequency[1] = (uint16_t *)p_data;
-		_timedLevel.waveform[0] = (int16_t *)p_data;
-		_timedLevel.waveform[1] = (int16_t *)p_data;
-		_kksphere->Update(_timedLevel);
-	}
-#else
-	uint32_t color;
-
-	if (_state == State::Recording) {
-		color = 0xFF00; // Red
+	if (_kksphere != NULL) {
+		if (result > 0 && _kksphere->IsReady()) {
+			_timedLevel.bufferSize = result;
+			_timedLevel.frequency[0] = (uint16_t *)p_data;
+			_timedLevel.frequency[1] = (uint16_t *)p_data;
+			_timedLevel.waveform[0] = (int16_t *)p_data;
+			_timedLevel.waveform[1] = (int16_t *)p_data;
+			_kksphere->Update(_timedLevel);
+		}
 	}
 	else {
-		color = 0xF00F; // Blue
+		uint32_t color;
+
+		if (_state == State::Recording) {
+			color = 0xFF00; // Red
+		}
+		else {
+			color = 0xF00F; // Blue
+		}
+		clear_screen();
+		disp_audio_wave((int16_t *)p_data, result / 2, color);
 	}
-	clear_screen();
-	disp_audio_wave((int16_t *)p_data, result / 2, color);
-#endif
 	if (_face_roi->width > 0 && _face_roi->height > 0) {
 		lcd_drawRect_(&audio_frame, _face_roi->x, _face_roi->y, _face_roi->width, _face_roi->height, 0xF0F0);
 	}
