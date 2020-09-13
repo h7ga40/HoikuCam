@@ -87,9 +87,6 @@ void get_bitmap_font(const uint8_t *string, uint8_t *bitmap_data, uint32_t *use_
 void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint32_t color)
 {
 	uint16_t *p_bottom_left_pos = (uint16_t *)& hlcd->_buffer[0];
-
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_bottom_left_pos[x + y * hlcd->_width] = ((color & 0xF0000000) >> 16)
 		| ((color & 0x00F00000) >> 12) | ((color & 0x0000F000) >> 8) | ((color & 0x000000F0) >> 4);
 }
@@ -97,9 +94,6 @@ void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint32_t color)
 void lcd_drawPixel(LCD_Handler_t *hlcd, int16_t x, int16_t y, uint16_t color)
 {
 	uint16_t *p_bottom_left_pos = (uint16_t *)& hlcd->_buffer[0];
-
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_bottom_left_pos[x + y * hlcd->_width] = color;
 }
 
@@ -110,11 +104,9 @@ void lcd_drawFastVLine(LCD_Handler_t *hlcd, int16_t x, int16_t y,
 	uint16_t *p_frame_buf;
 	int i;
 
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_frame_buf = &p_bottom_left_pos[x + y * hlcd->_width];
 
-	for (i = 0; i < h; i++, p_frame_buf -= hlcd->_width) {
+	for (i = 0; i < h; i++, p_frame_buf += hlcd->_width) {
 		*p_frame_buf = color;
 	}
 }
@@ -126,11 +118,9 @@ void lcd_drawFastHLine(LCD_Handler_t *hlcd, int16_t x, int16_t y,
 	uint16_t *p_frame_buf;
 	int i;
 
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_frame_buf = &p_bottom_left_pos[x + y * hlcd->_width];
 
-	for (i = 0; i < w; i++, p_frame_buf--) {
+	for (i = 0; i < w; i++, p_frame_buf++) {
 		*p_frame_buf = color;
 	}
 }
@@ -143,12 +133,10 @@ void lcd_drawFont(LCD_Handler_t *hlcd, uint8_t *bitmap_data, int x, int y, uint1
 	uint8_t *bitmap = bitmap_data;
 
 	b = 0x80;
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_frame_buf = &p_bottom_left_pos[x + y * hlcd->_width];
 
-	for (i = 0; i < FONT_HEIGHT; i++, p_frame_buf -= hlcd->_width - FONT_WIDTH) {
-		for (j = 0; j < FONT_WIDTH; j++, p_frame_buf--) {
+	for (i = 0; i < FONT_HEIGHT; i++, p_frame_buf += hlcd->_width - FONT_WIDTH) {
+		for (j = 0; j < FONT_WIDTH; j++, p_frame_buf++) {
 			if ((*bitmap & b) != 0) {
 				*p_frame_buf = color;
 			}
@@ -172,12 +160,10 @@ void lcd_drawFontHalf(LCD_Handler_t *hlcd, uint8_t *bitmap_data, int x, int y, u
 	uint8_t *bitmap = bitmap_data;
 
 	b = 0x80;
-	x = hlcd->_width - 1 - x;
-	y = hlcd->_height - 1 - y;
 	p_frame_buf = &p_bottom_left_pos[x + y * hlcd->_width];
 
-	for (i = 0; i < FONT_HEIGHT; i++, p_frame_buf -= hlcd->_width - FONT_HALF_WIDTH) {
-		for (j = 0; j < FONT_HALF_WIDTH; j++, p_frame_buf--) {
+	for (i = 0; i < FONT_HEIGHT; i++, p_frame_buf += hlcd->_width - FONT_HALF_WIDTH) {
+		for (j = 0; j < FONT_HALF_WIDTH; j++, p_frame_buf++) {
 			if ((*bitmap & b) != 0) {
 				*p_frame_buf = color;
 			}

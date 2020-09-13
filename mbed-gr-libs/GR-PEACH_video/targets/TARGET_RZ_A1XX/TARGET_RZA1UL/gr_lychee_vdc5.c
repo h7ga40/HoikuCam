@@ -990,7 +990,7 @@ drv_graphics_error_t DRV_Video_Write_Setting_Digital (
                                                                 output by scaling-down control block */
         scldw_rot->adj_sel      = VDC5_ON;                   /* Measures to decrease the influence
                                                                 by lack of last-input line (on/off) */
-        scldw_rot->res_ds_wr_md = VDC5_WR_MD_ROT_180DEG;     /* Frame buffer writing mode */
+        scldw_rot->res_ds_wr_md = VDC5_WR_MD_NORMAL;         /* Frame buffer writing mode */
         write.res_wrswa     = (vdc5_wr_rd_swa_t)wr_rd_swa;   /* Frame buffer swap setting */
         write.res_md        = res_md;                        /* Frame buffer video-signal writing format */
         write.res_bst_md    = VDC5_BST_MD_32BYTE;            /* Transfer burst length for frame buffer */

@@ -11,10 +11,7 @@
 #include "EasyAttach_CameraAndLCD.h"
 #include "crc16.h"
 
-#define RESULT_BUFFER_BYTE_PER_PIXEL  (2u)
-#define RESULT_BUFFER_STRIDE          (((LCD_PIXEL_WIDTH * RESULT_BUFFER_BYTE_PER_PIXEL) + 31u) & ~31u)
-#define RESULT_BUFFER_HEIGHT          (LCD_PIXEL_HEIGHT)
-extern uint8_t user_frame_buffer_result[RESULT_BUFFER_STRIDE * RESULT_BUFFER_HEIGHT]__attribute((section("NC_BSS"), aligned(32)));
+extern uint8_t user_frame_buffer_result[];
 
 const unsigned char BMPHeader[BITMAP_HEADER_SIZE] = {
 	0x42, 0x4D,					// "BM"
@@ -936,7 +933,7 @@ void LeptonTask::Process()
 
 		values = &_image[BITMAP_HEADER_SIZE / 2];
 		for (int row = 0; row < PACKETS_PER_FRAME; row++) {
-			uint16_t *pixel = &((uint16_t *)&user_frame_buffer_result)[(LCD_PIXEL_WIDTH - 1 - PIXEL_PER_LINE) + (LCD_PIXEL_HEIGHT - 1 - row) * LCD_PIXEL_WIDTH];
+			uint16_t *pixel = &((uint16_t *)&user_frame_buffer_result)[(LCD_PIXEL_WIDTH - PIXEL_PER_LINE) + (LCD_PIXEL_HEIGHT - PACKETS_PER_FRAME + row) * LCD_PIXEL_WIDTH];
 			for (int column = 0; column < PIXEL_PER_LINE; column++) {
 				uint16_t value = *values;
 				uint8_t index;
@@ -1019,7 +1016,7 @@ void LeptonTask::Process()
 				}
 				}
 				// ARGB4444
-				*pixel++ = 0xF000 | ((colormap[0] >> 4) << 8) | ((colormap[1] >> 4) << 4) | ((colormap[2] >> 4) << 0);
+				*pixel-- = 0xF000 | ((colormap[0] >> 4) << 8) | ((colormap[1] >> 4) << 4) | ((colormap[2] >> 4) << 0);
 				values++;
 			}
 		}
